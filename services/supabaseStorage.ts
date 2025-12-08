@@ -3,9 +3,9 @@ import { supabase } from "./supabaseClient";
 import { Transaction, CardInfo } from "../types";
 import { DEFAULT_CARDS, DEFAULT_CATEGORIES } from "../constants";
 
-// -------------------------------
+// ===========================================
 // CARDS
-// -------------------------------
+// ===========================================
 export async function getCards(): Promise<CardInfo[]> {
   const { data, error } = await supabase
     .from("cards")
@@ -21,12 +21,13 @@ export async function getCards(): Promise<CardInfo[]> {
 }
 
 export async function saveCards(cards: CardInfo[]) {
+  if (!cards || cards.length === 0) return;
   await supabase.from("cards").upsert(cards);
 }
 
-// -------------------------------
+// ===========================================
 // CATEGORIES
-// -------------------------------
+// ===========================================
 export async function getCategories(): Promise<string[]> {
   const { data, error } = await supabase
     .from("categories")
@@ -42,13 +43,15 @@ export async function getCategories(): Promise<string[]> {
 }
 
 export async function saveCategories(categories: string[]) {
+  if (!categories || categories.length === 0) return;
+
   const rows = categories.map((name) => ({ name }));
   await supabase.from("categories").upsert(rows);
 }
 
-// -------------------------------
+// ===========================================
 // TRANSACTIONS
-// -------------------------------
+// ===========================================
 export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
     .from("transactions")
@@ -64,5 +67,6 @@ export async function getTransactions(): Promise<Transaction[]> {
 }
 
 export async function saveTransactions(transactions: Transaction[]) {
+  if (!transactions || transactions.length === 0) return;
   await supabase.from("transactions").upsert(transactions);
 }
