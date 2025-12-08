@@ -1,0 +1,5 @@
+{
+  "name": "Gestão Financeira PWA",
+  "description": "Aplicativo de controle financeiro pessoal focado em cartões de crédito e contas fixas com visualização gráfica detalhada.",
+  "requestFramePermissions": []
+}

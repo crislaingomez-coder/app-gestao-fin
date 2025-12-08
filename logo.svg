@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fundo Azul Arredondado -->
+  <rect width="512" height="512" rx="128" fill="#2563eb"/>
+  
+  <!-- Sombra sutil -->
+  <path d="M128 350L256 480L384 350" fill="none" stroke="#1e40af" stroke-width="20" opacity="0.1"/>
+
+  <!-- Ícone de Carteira Simplificado -->
+  <rect x="112" y="144" width="288" height="224" rx="32" fill="#ffffff"/>
+  <path d="M112 184h288" stroke="#e5e7eb" stroke-width="16"/>
+  
+  <!-- Aba da carteira -->
+  <path d="M320 232h80v48h-80a24 24 0 0 1-24-24v0a24 24 0 0 1 24-24z" fill="#f59e0b"/>
+  
+  <!-- Detalhe do botão/moeda -->
+  <circle cx="360" cy="256" r="12" fill="#ffffff"/>
+</svg>
