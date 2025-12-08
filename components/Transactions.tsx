@@ -16,7 +16,7 @@ interface TransactionsProps {
   onDeleteTransaction: (id: string) => void;
   onUpdateTransactions: (updates: Transaction[]) => void;
   isPrivacyMode: boolean;
-  onRequestConfirm: (message: string, onConfirm: () => void) => void;
+  onRequestConfirm?: (message: string, onConfirm: () => void) => void;
 }
 
 interface CustomSelectProps {
