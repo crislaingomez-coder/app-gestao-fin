@@ -25,8 +25,12 @@ export async function getCards(): Promise<CardInfo[]> {
 export async function saveCards(cards: CardInfo[]) {
   if (!cards || cards.length === 0) return;
 
-  const rows = cards.map(c => ({
-    ...c,
+  const rows = cards.map((c) => ({
+    id: c.id,
+    name: c.name,
+    bestDay: c.bestDay,
+    dueDay: c.dueDay,
+    color: c.color,
     user_id: FIXED_USER_ID,
     created_at: c.created_at || new Date().toISOString(),
   }));
