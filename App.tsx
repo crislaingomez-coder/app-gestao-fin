@@ -16,6 +16,9 @@ import {
 
 import { getCurrentMonthStr } from './constants';
 
+// =======================================================
+// LOGO SVG
+// =======================================================
 const Logo = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={className}>
     <rect width="512" height="512" rx="128" fill="#2563eb"/>
@@ -27,6 +30,9 @@ const Logo = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// =======================================================
+// APP
+// =======================================================
 const App: React.FC = () => {
   const [screen, setScreen] = useState<string>('login');
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthStr());
@@ -36,9 +42,16 @@ const App: React.FC = () => {
   const [cards, setCards] = useState<CardInfo[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
 
-  // ==========================================
-  // LOAD INITIAL DATA FROM SUPABASE
-  // ==========================================
+  // ======================================================
+  // FUNÇÃO ADICIONADA → NECESSÁRIA PARA Transactions.tsx
+  // ======================================================
+  const onRequestConfirm = (msg: string, onConfirm: () => void) => {
+    if (window.confirm(msg)) onConfirm();
+  };
+
+  // ======================================================
+  // LOAD INITIAL DATA (SUPABASE)
+  // ======================================================
   useEffect(() => {
     (async () => {
       const trx = await getTransactions();
@@ -51,30 +64,24 @@ const App: React.FC = () => {
     })();
   }, []);
 
-  // ==========================================
-  // SAVE WHEN CHANGES OCCUR
-  // ==========================================
+  // ======================================================
+  // SAVE UPDATES
+  // ======================================================
   useEffect(() => {
-    if (transactions.length > 0) {
-      saveTransactions(transactions);
-    }
+    if (transactions.length > 0) saveTransactions(transactions);
   }, [transactions]);
 
   useEffect(() => {
-    if (cards.length > 0) {
-      saveCards(cards);
-    }
+    if (cards.length > 0) saveCards(cards);
   }, [cards]);
 
   useEffect(() => {
-    if (categories.length > 0) {
-      saveCategories(categories);
-    }
+    if (categories.length > 0) saveCategories(categories);
   }, [categories]);
 
-  // ==========================================
-  // HANDLERS (SEM ALTERAR LÓGICA)
-  // ==========================================
+  // ======================================================
+  // HANDLERS (mesma lógica)
+  // ======================================================
   const handleAddTransaction = (newTransactions: Transaction[]) => {
     setTransactions(prev => {
       const updated = [...prev, ...newTransactions];
@@ -88,12 +95,9 @@ const App: React.FC = () => {
   };
 
   const handleUpdateTransactions = (updates: Transaction[]) => {
-    setTransactions(prev => {
-      return prev.map(t => {
-        const update = updates.find(u => u.id === t.id);
-        return update ? update : t;
-      });
-    });
+    setTransactions(prev =>
+      prev.map(t => updates.find(u => u.id === t.id) ?? t)
+    );
   };
 
   const handleAddCard = (c: CardInfo) => {
@@ -124,7 +128,11 @@ const App: React.FC = () => {
     setCategories(prev => prev.filter(c => c !== cat));
   };
 
-  const handleRestoreData = (newTransactions: Transaction[], newCards: CardInfo[], newCategories: string[]) => {
+  const handleRestoreData = (
+    newTransactions: Transaction[],
+    newCards: CardInfo[],
+    newCategories: string[]
+  ) => {
     setTransactions(newTransactions);
     setCards(newCards);
     setCategories(newCategories);
@@ -138,9 +146,9 @@ const App: React.FC = () => {
     setIsPrivacyMode(prev => !prev);
   };
 
-  // ==========================================
-  // LOGIN SCREEN
-  // ==========================================
+  // ======================================================
+  // LOGIN PAGE
+  // ======================================================
   if (screen === 'login') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 relative overflow-hidden">
@@ -170,9 +178,9 @@ const App: React.FC = () => {
     );
   }
 
-  // ==========================================
+  // ======================================================
   // MAIN APP SCREENS
-  // ==========================================
+  // ======================================================
   return (
     <Layout
       activeScreen={screen}
@@ -200,6 +208,9 @@ const App: React.FC = () => {
           onDeleteTransaction={handleDeleteTransaction}
           onUpdateTransactions={handleUpdateTransactions}
           isPrivacyMode={isPrivacyMode}
+
+          // ✔ CORREÇÃO PARA NÃO QUEBRAR O SELECT
+          onRequestConfirm={onRequestConfirm}
         />
       )}
 
