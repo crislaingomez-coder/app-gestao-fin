@@ -28,10 +28,12 @@ export async function saveCards(cards: CardInfo[]) {
 // ===========================================
 // CATEGORIES
 // ===========================================
+
+// Agora retorna objetos completos: { id, name }
 export async function getCategories(): Promise<string[]> {
   const { data, error } = await supabase
     .from("categories")
-    .select("*")
+    .select("id, name")
     .order("name", { ascending: true });
 
   if (error) {
@@ -45,8 +47,14 @@ export async function getCategories(): Promise<string[]> {
 export async function saveCategories(categories: string[]) {
   if (!categories || categories.length === 0) return;
 
-  const rows = categories.map((name) => ({ name }));
-  await supabase.from("categories").upsert(rows);
+  // MANTÉM consistência entre Supabase e UI
+  const rows = categories.map((name) => ({
+    name,
+  }));
+
+  await supabase.from("categories").upsert(rows, {
+    onConflict: "name",
+  });
 }
 
 // ===========================================
@@ -68,5 +76,8 @@ export async function getTransactions(): Promise<Transaction[]> {
 
 export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
-  await supabase.from("transactions").upsert(transactions);
+
+  await supabase.from("transactions").upsert(transactions, {
+    onConflict: "id",
+  });
 }
