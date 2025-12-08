@@ -4,14 +4,18 @@ import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
 import Settings from './components/Settings';
 import { Transaction, CardInfo } from './types';
-import { 
-    getTransactions, saveTransactions, 
-    getCards, saveCards,
-    getCategories, saveCategories 
-} from './services/storage';
+
+import {
+  getTransactions,
+  saveTransactions,
+  getCards,
+  saveCards,
+  getCategories,
+  saveCategories
+} from "./services/supabaseStorage";
+
 import { getCurrentMonthStr } from './constants';
 
-// Componente Logo SVG embutido
 const Logo = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={className}>
     <rect width="512" height="512" rx="128" fill="#2563eb"/>
@@ -23,148 +27,171 @@ const Logo = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Confirmation Dialog Component for global use if needed, 
-// though currently Transactions and Settings implement their own UI logic 
-// passing onRequestConfirm. For App level delete handlers, we use a simple approach.
-
 const App: React.FC = () => {
   const [screen, setScreen] = useState<string>('login');
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthStr());
   const [isPrivacyMode, setIsPrivacyMode] = useState(false);
-  
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [cards, setCards] = useState<CardInfo[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
 
-  // Load Data
+  // ==========================================
+  // LOAD INITIAL DATA FROM SUPABASE
+  // ==========================================
   useEffect(() => {
-    setTransactions(getTransactions());
-    setCards(getCards());
-    setCategories(getCategories());
+    (async () => {
+      const trx = await getTransactions();
+      const crd = await getCards();
+      const cat = await getCategories();
+
+      setTransactions(trx);
+      setCards(crd);
+      setCategories(cat);
+    })();
   }, []);
 
-  // Save Data effects
+  // ==========================================
+  // SAVE WHEN CHANGES OCCUR
+  // ==========================================
   useEffect(() => {
-    if (transactions.length > 0 || localStorage.getItem('app_transactions')) {
-         saveTransactions(transactions);
+    if (transactions.length > 0) {
+      saveTransactions(transactions);
     }
   }, [transactions]);
 
   useEffect(() => {
-    if (cards.length > 0) saveCards(cards);
+    if (cards.length > 0) {
+      saveCards(cards);
+    }
   }, [cards]);
-  
+
   useEffect(() => {
-    if (categories.length > 0) saveCategories(categories);
+    if (categories.length > 0) {
+      saveCategories(categories);
+    }
   }, [categories]);
 
-
-  // Handlers
+  // ==========================================
+  // HANDLERS (SEM ALTERAR LÓGICA)
+  // ==========================================
   const handleAddTransaction = (newTransactions: Transaction[]) => {
-    setTransactions(prev => [...prev, ...newTransactions]);
+    setTransactions(prev => {
+      const updated = [...prev, ...newTransactions];
+      saveTransactions(updated);
+      return updated;
+    });
   };
 
   const handleDeleteTransaction = (id: string) => {
-    // Logic handled inside Transactions component which calls this after confirmation
     setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
   const handleUpdateTransactions = (updates: Transaction[]) => {
-      setTransactions(prev => {
-          return prev.map(t => {
-              const update = updates.find(u => u.id === t.id);
-              return update ? update : t;
-          });
+    setTransactions(prev => {
+      return prev.map(t => {
+        const update = updates.find(u => u.id === t.id);
+        return update ? update : t;
       });
+    });
   };
 
   const handleAddCard = (c: CardInfo) => {
-    setCards(prev => [...prev, c]);
+    setCards(prev => {
+      const updated = [...prev, c];
+      saveCards(updated);
+      return updated;
+    });
   };
 
   const handleEditCard = (updatedCard: CardInfo) => {
-      setCards(prev => prev.map(c => c.id === updatedCard.id ? updatedCard : c));
+    setCards(prev => prev.map(c => (c.id === updatedCard.id ? updatedCard : c)));
   };
 
   const handleDeleteCard = (id: string) => {
-      // Logic handled inside Settings component which calls this after confirmation
-      setCards(prev => prev.filter(c => c.id !== id));
+    setCards(prev => prev.filter(c => c.id !== id));
   };
 
   const handleAddCategory = (cat: string) => {
-      if (!categories.includes(cat)) {
-          setCategories(prev => [...prev, cat]);
-      }
+    if (!categories.includes(cat)) {
+      const updated = [...categories, cat];
+      setCategories(updated);
+      saveCategories(updated);
+    }
   };
 
   const handleDeleteCategory = (cat: string) => {
-      // Logic handled inside Settings component which calls this after confirmation
-      setCategories(prev => prev.filter(c => c !== cat));
+    setCategories(prev => prev.filter(c => c !== cat));
   };
-  
-  // Data Restore Handler
+
   const handleRestoreData = (newTransactions: Transaction[], newCards: CardInfo[], newCategories: string[]) => {
-      setTransactions(newTransactions);
-      setCards(newCards);
-      setCategories(newCategories);
-      
-      saveTransactions(newTransactions);
-      saveCards(newCards);
-      saveCategories(newCategories);
+    setTransactions(newTransactions);
+    setCards(newCards);
+    setCategories(newCategories);
+
+    saveTransactions(newTransactions);
+    saveCards(newCards);
+    saveCategories(newCategories);
   };
 
   const togglePrivacyMode = () => {
     setIsPrivacyMode(prev => !prev);
   };
 
+  // ==========================================
+  // LOGIN SCREEN
+  // ==========================================
   if (screen === 'login') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 relative overflow-hidden">
-        
-        {/* Background Decorations */}
+
         <div className="absolute top-[-10%] right-[-10%] w-[50vh] h-[50vh] bg-blue-200/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-[40vh] h-[40vh] bg-orange-200/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
 
         <div className="relative z-10 flex flex-col items-center w-full max-w-sm">
-             <div className="mb-8 p-6 bg-white rounded-[2.5rem] shadow-xl shadow-blue-500/10 animate-scale-in">
-                <Logo className="w-24 h-24 drop-shadow-lg" />
-             </div>
-             
-             <h1 className="text-3xl font-extrabold text-gray-800 mb-2 tracking-tight text-center">Minha Gestão</h1>
-             <p className="text-gray-400 mb-10 text-center text-sm font-medium">Controle financeiro pessoal inteligente</p>
-             
-             <button
-              onClick={() => setScreen('dashboard')}
-              className="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group"
-            >
-              <span>Entrar</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </button>
-            
-            <p className="mt-8 text-xs text-gray-400 font-medium">Versão 1.0.0 (PWA)</p>
+          <div className="mb-8 p-6 bg-white rounded-[2.5rem] shadow-xl shadow-blue-500/10 animate-scale-in">
+            <Logo className="w-24 h-24 drop-shadow-lg" />
+          </div>
+
+          <h1 className="text-3xl font-extrabold text-gray-800 mb-2 tracking-tight text-center">Minha Gestão</h1>
+          <p className="text-gray-400 mb-10 text-center text-sm font-medium">Controle financeiro pessoal inteligente</p>
+
+          <button
+            onClick={() => setScreen('dashboard')}
+            className="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group"
+          >
+            <span>Entrar</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+
+          <p className="mt-8 text-xs text-gray-400 font-medium">Versão 1.0.0 (PWA)</p>
         </div>
       </div>
     );
   }
 
+  // ==========================================
+  // MAIN APP SCREENS
+  // ==========================================
   return (
-    <Layout 
-        activeScreen={screen} 
-        onNavigate={setScreen} 
-        isPrivacyMode={isPrivacyMode} 
-        togglePrivacyMode={togglePrivacyMode}
+    <Layout
+      activeScreen={screen}
+      onNavigate={setScreen}
+      isPrivacyMode={isPrivacyMode}
+      togglePrivacyMode={togglePrivacyMode}
     >
       {screen === 'dashboard' && (
-        <Dashboard 
-          transactions={transactions} 
+        <Dashboard
+          transactions={transactions}
           cards={cards}
           selectedMonth={selectedMonth}
           onMonthChange={setSelectedMonth}
           isPrivacyMode={isPrivacyMode}
         />
       )}
+
       {(screen === 'expenses' || screen === 'payments') && (
-        <Transactions 
+        <Transactions
           mode={screen}
           transactions={transactions}
           cards={cards}
@@ -175,8 +202,9 @@ const App: React.FC = () => {
           isPrivacyMode={isPrivacyMode}
         />
       )}
+
       {screen === 'settings' && (
-        <Settings 
+        <Settings
           cards={cards}
           categories={categories}
           transactions={transactions}
