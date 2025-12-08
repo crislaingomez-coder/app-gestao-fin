@@ -3,6 +3,8 @@ import { supabase } from "./supabaseClient";
 import { Transaction, CardInfo } from "../types";
 import { DEFAULT_CARDS, DEFAULT_CATEGORIES } from "../constants";
 
+const FIXED_USER_ID = "00000000-0000-0000-0000-000000000000";
+
 // ==========================================================
 // CARDS
 // ==========================================================
@@ -25,11 +27,14 @@ export async function saveCards(cards: CardInfo[]) {
 
   const rows = cards.map(c => ({
     ...c,
-    user_id: null,
-    created_at: c.created_at || new Date().toISOString()
+    user_id: FIXED_USER_ID,
+    created_at: c.created_at || new Date().toISOString(),
   }));
 
-  const { error } = await supabase.from("cards").upsert(rows, { onConflict: "id" });
+  const { error } = await supabase
+    .from("cards")
+    .upsert(rows, { onConflict: "id" });
+
   if (error) console.error("Erro ao salvar cards:", error);
 }
 
@@ -53,13 +58,16 @@ export async function getCategories(): Promise<string[]> {
 export async function saveCategories(categories: string[]) {
   if (!categories || categories.length === 0) return;
 
-  const rows = categories.map(name => ({
+  const rows = categories.map((name) => ({
     name,
-    user_id: null,
-    created_at: new Date().toISOString()
+    user_id: FIXED_USER_ID,
+    created_at: new Date().toISOString(),
   }));
 
-  const { error } = await supabase.from("categories").upsert(rows, { onConflict: "name" });
+  const { error } = await supabase
+    .from("categories")
+    .upsert(rows, { onConflict: "name" });
+
   if (error) console.error("Erro ao salvar categorias:", error);
 }
 
@@ -83,12 +91,15 @@ export async function getTransactions(): Promise<Transaction[]> {
 export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
 
-  const rows = transactions.map(t => ({
+  const rows = transactions.map((t) => ({
     ...t,
-    user_id: null,
-    created_at: t.created_at || new Date().toISOString()
+    user_id: FIXED_USER_ID,
+    created_at: t.created_at || new Date().toISOString(),
   }));
 
-  const { error } = await supabase.from("transactions").upsert(rows, { onConflict: "id" });
+  const { error } = await supabase
+    .from("transactions")
+    .upsert(rows, { onConflict: "id" });
+
   if (error) console.error("Erro ao salvar transações:", error);
 }
