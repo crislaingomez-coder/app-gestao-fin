@@ -3,9 +3,9 @@ import { supabase } from "./supabaseClient";
 import { Transaction, CardInfo } from "../types";
 import { DEFAULT_CARDS, DEFAULT_CATEGORIES } from "../constants";
 
-// ===========================================
+// ==========================================================
 // CARDS
-// ===========================================
+// ==========================================================
 export async function getCards(): Promise<CardInfo[]> {
   const { data, error } = await supabase
     .from("cards")
@@ -22,14 +22,20 @@ export async function getCards(): Promise<CardInfo[]> {
 
 export async function saveCards(cards: CardInfo[]) {
   if (!cards || cards.length === 0) return;
-  await supabase.from("cards").upsert(cards);
+
+  const rows = cards.map(c => ({
+    ...c,
+    user_id: null,
+    created_at: c.created_at || new Date().toISOString()
+  }));
+
+  const { error } = await supabase.from("cards").upsert(rows, { onConflict: "id" });
+  if (error) console.error("Erro ao salvar cards:", error);
 }
 
-// ===========================================
+// ==========================================================
 // CATEGORIES
-// ===========================================
-
-// Agora retorna objetos completos: { id, name }
+// ==========================================================
 export async function getCategories(): Promise<string[]> {
   const { data, error } = await supabase
     .from("categories")
@@ -47,19 +53,19 @@ export async function getCategories(): Promise<string[]> {
 export async function saveCategories(categories: string[]) {
   if (!categories || categories.length === 0) return;
 
-  // MANTÉM consistência entre Supabase e UI
-  const rows = categories.map((name) => ({
+  const rows = categories.map(name => ({
     name,
+    user_id: null,
+    created_at: new Date().toISOString()
   }));
 
-  await supabase.from("categories").upsert(rows, {
-    onConflict: "name",
-  });
+  const { error } = await supabase.from("categories").upsert(rows, { onConflict: "name" });
+  if (error) console.error("Erro ao salvar categorias:", error);
 }
 
-// ===========================================
+// ==========================================================
 // TRANSACTIONS
-// ===========================================
+// ==========================================================
 export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
     .from("transactions")
@@ -77,7 +83,12 @@ export async function getTransactions(): Promise<Transaction[]> {
 export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
 
-  await supabase.from("transactions").upsert(transactions, {
-    onConflict: "id",
-  });
+  const rows = transactions.map(t => ({
+    ...t,
+    user_id: null,
+    created_at: t.created_at || new Date().toISOString()
+  }));
+
+  const { error } = await supabase.from("transactions").upsert(rows, { onConflict: "id" });
+  if (error) console.error("Erro ao salvar transações:", error);
 }
