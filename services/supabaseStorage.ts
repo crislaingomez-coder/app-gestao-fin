@@ -28,8 +28,8 @@ export async function saveCards(cards: CardInfo[]) {
   const rows = cards.map((c) => ({
     id: c.id,
     name: c.name,
-    bestday: c.bestDay,   // <- corrigido
-    dueday: c.dueDay,     // <- corrigido
+    bestday: c.bestDay,       // nome da coluna corrigido
+    dueday: c.dueDay,         // nome da coluna corrigido
     color: c.color,
     user_id: FIXED_USER_ID,
     created_at: c.created_at || new Date().toISOString(),
@@ -41,6 +41,13 @@ export async function saveCards(cards: CardInfo[]) {
 
   if (error) console.error("Erro ao salvar cards:", error);
 }
+
+// 🔥 DELETE CARD
+export async function deleteCard(id: string) {
+  const { error } = await supabase.from("cards").delete().eq("id", id);
+  if (error) console.error("Erro ao deletar cartão:", error);
+}
+
 
 // ==========================================================
 // CATEGORIES
@@ -63,7 +70,7 @@ export async function saveCategories(categories: string[]) {
   if (!categories || categories.length === 0) return;
 
   const rows = categories.map((name) => ({
-    id: crypto.randomUUID(), // <- corrigido
+    id: crypto.randomUUID(),    // corrigido
     name,
     user_id: FIXED_USER_ID,
     created_at: new Date().toISOString(),
@@ -75,6 +82,17 @@ export async function saveCategories(categories: string[]) {
 
   if (error) console.error("Erro ao salvar categorias:", error);
 }
+
+// 🔥 DELETE CATEGORY
+export async function deleteCategory(name: string) {
+  const { error } = await supabase
+    .from("categories")
+    .delete()
+    .eq("name", name);
+
+  if (error) console.error("Erro ao deletar categoria:", error);
+}
+
 
 // ==========================================================
 // TRANSACTIONS
@@ -107,4 +125,14 @@ export async function saveTransactions(transactions: Transaction[]) {
     .upsert(rows, { onConflict: "id" });
 
   if (error) console.error("Erro ao salvar transações:", error);
+}
+
+// 🔥 DELETE TRANSACTION
+export async function deleteTransaction(id: string) {
+  const { error } = await supabase
+    .from("transactions")
+    .delete()
+    .eq("id", id);
+
+  if (error) console.error("Erro ao deletar transação:", error);
 }
