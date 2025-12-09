@@ -5,17 +5,6 @@ import { DEFAULT_CARDS, DEFAULT_CATEGORIES } from "../constants";
 
 const FIXED_USER_ID = "00000000-0000-0000-0000-000000000000";
 
-function ensureUUID(id?: string) {
-  try {
-    if (!id) return crypto.randomUUID();
-    // simples validação de UUID v4/1 etc (hex + dashes)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(id) ? id : crypto.randomUUID();
-  } catch {
-    return crypto.randomUUID();
-  }
-}
-
 // ==========================================================
 // CARDS
 // ==========================================================
@@ -37,7 +26,7 @@ export async function saveCards(cards: CardInfo[]) {
   if (!cards || cards.length === 0) return;
 
   const rows = cards.map((c) => ({
-    id: ensureUUID(c.id),
+    id: c.id,
     name: c.name,
     bestday: c.bestDay,
     dueday: c.dueDay,
@@ -61,6 +50,7 @@ export async function deleteCard(id: string) {
 
   if (error) console.error("Erro ao deletar cartão:", error);
 }
+
 
 // ==========================================================
 // CATEGORIES
@@ -105,6 +95,7 @@ export async function deleteCategory(name: string) {
   if (error) console.error("Erro ao deletar categoria:", error);
 }
 
+
 // ==========================================================
 // TRANSACTIONS
 // ==========================================================
@@ -126,7 +117,7 @@ export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
 
   const rows = transactions.map((t) => ({
-    id: ensureUUID(t.id),
+    id: t.id,
     description: t.description,
     amount: t.amount,
     date: t.date,
@@ -138,11 +129,11 @@ export async function saveTransactions(transactions: Transaction[]) {
     card_id: t.cardId || null,
     invoice_month: t.invoiceMonth || null,
 
-    installment_current: t.installments?.current ?? null,
-    installment_total: t.installments?.total ?? null,
-    installment_group_id: t.installments?.groupId ?? null,
+    installment_current: t.installments?.current || null,
+    installment_total: t.installments?.total || null,
+    installment_group_id: t.installments?.groupId || null,
 
-    paid_amount: t.paidAmount ?? 0,
+    // ⚠️ REMOVIDO: paid_amount — NÃO EXISTE NA SUA TABELA
 
     user_id: FIXED_USER_ID,
     created_at: t.created_at || new Date().toISOString(),
@@ -163,6 +154,7 @@ export async function deleteTransaction(id: string) {
 
   if (error) console.error("Erro ao deletar transação:", error);
 }
+
 
 // ==========================================================
 // PAYMENTS
@@ -185,11 +177,10 @@ export async function savePayments(payments: any[]) {
   if (!payments || payments.length === 0) return;
 
   const rows = payments.map((p) => ({
-    id: ensureUUID(p.id),
-    transaction_id: ensureUUID(p.transactionId),
+    id: p.id,
+    transaction_id: p.transactionId,
     amount: p.amount,
     date: p.date,
-
     user_id: FIXED_USER_ID,
     created_at: p.created_at || new Date().toISOString(),
   }));
