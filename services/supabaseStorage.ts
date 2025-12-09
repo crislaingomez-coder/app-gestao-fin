@@ -12,14 +12,14 @@ export async function getCards(): Promise<CardInfo[]> {
   const { data, error } = await supabase
     .from("cards")
     .select("*")
-    .order("created_at", { ascending: true });
+    .order("created_at");
 
   if (error) {
     console.error("Erro ao carregar cards:", error);
     return DEFAULT_CARDS;
   }
 
-  return data || DEFAULT_CARDS;
+  return data || [];
 }
 
 export async function saveCards(cards: CardInfo[]) {
@@ -28,8 +28,8 @@ export async function saveCards(cards: CardInfo[]) {
   const rows = cards.map((c) => ({
     id: c.id,
     name: c.name,
-    bestday: c.bestDay,       // nome da coluna corrigido
-    dueday: c.dueDay,         // nome da coluna corrigido
+    bestday: c.bestDay,
+    dueday: c.dueDay,
     color: c.color,
     user_id: FIXED_USER_ID,
     created_at: c.created_at || new Date().toISOString(),
@@ -42,9 +42,12 @@ export async function saveCards(cards: CardInfo[]) {
   if (error) console.error("Erro ao salvar cards:", error);
 }
 
-// 🔥 DELETE CARD
 export async function deleteCard(id: string) {
-  const { error } = await supabase.from("cards").delete().eq("id", id);
+  const { error } = await supabase
+    .from("cards")
+    .delete()
+    .eq("id", id);
+
   if (error) console.error("Erro ao deletar cartão:", error);
 }
 
@@ -55,22 +58,22 @@ export async function deleteCard(id: string) {
 export async function getCategories(): Promise<string[]> {
   const { data, error } = await supabase
     .from("categories")
-    .select("id, name")
-    .order("name", { ascending: true });
+    .select("*")
+    .order("name");
 
   if (error) {
     console.error("Erro ao carregar categorias:", error);
     return DEFAULT_CATEGORIES;
   }
 
-  return data?.map((c) => c.name) || DEFAULT_CATEGORIES;
+  return data?.map((c) => c.name) ?? DEFAULT_CATEGORIES;
 }
 
 export async function saveCategories(categories: string[]) {
   if (!categories || categories.length === 0) return;
 
   const rows = categories.map((name) => ({
-    id: crypto.randomUUID(),    // corrigido
+    id: crypto.randomUUID(),
     name,
     user_id: FIXED_USER_ID,
     created_at: new Date().toISOString(),
@@ -83,7 +86,6 @@ export async function saveCategories(categories: string[]) {
   if (error) console.error("Erro ao salvar categorias:", error);
 }
 
-// 🔥 DELETE CATEGORY
 export async function deleteCategory(name: string) {
   const { error } = await supabase
     .from("categories")
@@ -101,7 +103,7 @@ export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
     .from("transactions")
     .select("*")
-    .order("created_at", { ascending: true });
+    .order("created_at");
 
   if (error) {
     console.error("Erro ao carregar transações:", error);
@@ -127,7 +129,6 @@ export async function saveTransactions(transactions: Transaction[]) {
   if (error) console.error("Erro ao salvar transações:", error);
 }
 
-// 🔥 DELETE TRANSACTION
 export async function deleteTransaction(id: string) {
   const { error } = await supabase
     .from("transactions")
@@ -135,4 +136,47 @@ export async function deleteTransaction(id: string) {
     .eq("id", id);
 
   if (error) console.error("Erro ao deletar transação:", error);
+}
+
+
+// ==========================================================
+// PAYMENTS
+// ==========================================================
+export async function getPayments() {
+  const { data, error } = await supabase
+    .from("payments")
+    .select("*")
+    .order("created_at");
+
+  if (error) {
+    console.error("Erro ao carregar pagamentos:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+export async function savePayments(payments: any[]) {
+  if (!payments || payments.length === 0) return;
+
+  const rows = payments.map((p) => ({
+    ...p,
+    user_id: FIXED_USER_ID,
+    created_at: p.created_at || new Date().toISOString(),
+  }));
+
+  const { error } = await supabase
+    .from("payments")
+    .upsert(rows, { onConflict: "id" });
+
+  if (error) console.error("Erro ao salvar pagamentos:", error);
+}
+
+export async function deletePayment(id: string) {
+  const { error } = await supabase
+    .from("payments")
+    .delete()
+    .eq("id", id);
+
+  if (error) console.error("Erro ao deletar pagamento:", error);
 }
