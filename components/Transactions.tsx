@@ -8,7 +8,7 @@ import DatePicker from './DatePicker';
 // ADICIONADO: serviços de delete (apenas isso foi adicionado ao original)
 import { deleteTransaction, deletePayment } from "../services/supabaseStorage";
 
-const generateId = (): string => Math.random().toString(36).substr(2, 9);
+const generateId = (): string => crypto.randomUUID();
 
 interface TransactionsProps {
   mode: 'expenses' | 'payments';
