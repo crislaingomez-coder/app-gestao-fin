@@ -51,7 +51,6 @@ export async function deleteCard(id: string) {
   if (error) console.error("Erro ao deletar cartão:", error);
 }
 
-
 // ==========================================================
 // CATEGORIES
 // ==========================================================
@@ -95,7 +94,6 @@ export async function deleteCategory(name: string) {
   if (error) console.error("Erro ao deletar categoria:", error);
 }
 
-
 // ==========================================================
 // TRANSACTIONS
 // ==========================================================
@@ -116,28 +114,24 @@ export async function getTransactions(): Promise<Transaction[]> {
 export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
 
-  const rows = transactions.map((t) => ({
-    id: t.id,
-    description: t.description,
-    amount: t.amount,
-    date: t.date,
-    type: t.type,
-    category: t.category,
-    status: t.status,
+  const rows = transactions.map((t) => {
+    // REMOVER CAMPOS QUE NÃO EXISTEM NO SUPABASE
+    const { payments, installments, ...rest } = t;
 
-    // nomes corretos no banco
-    card_id: t.cardId || null,
-    invoice_month: t.invoiceMonth || null,
+    return {
+      ...rest,
+      card_id: t.cardId || null,
+      invoice_month: t.invoiceMonth || null,
 
-    installment_current: t.installments?.current || null,
-    installment_total: t.installments?.total || null,
-    installment_group_id: t.installments?.groupId || null,
+      installment_current: t.installments?.current || null,
+      installment_total: t.installments?.total || null,
+      installment_group_id: t.installments?.groupId || null,
 
-    paid_amount: t.paidAmount || 0,
-
-    user_id: FIXED_USER_ID,
-    created_at: t.created_at || new Date().toISOString(),
-  }));
+      paid_amount: t.paidAmount || 0,
+      user_id: FIXED_USER_ID,
+      created_at: t.created_at || new Date().toISOString(),
+    };
+  });
 
   const { error } = await supabase
     .from("transactions")
@@ -154,7 +148,6 @@ export async function deleteTransaction(id: string) {
 
   if (error) console.error("Erro ao deletar transação:", error);
 }
-
 
 // ==========================================================
 // PAYMENTS
