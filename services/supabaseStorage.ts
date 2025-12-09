@@ -14,12 +14,18 @@ export async function getCards(): Promise<CardInfo[]> {
     .select("*")
     .order("created_at");
 
+  // Se erro → usa padrão
   if (error) {
     console.error("Erro ao carregar cards:", error);
     return DEFAULT_CARDS;
   }
 
-  return data || [];
+  // Se banco vazio → usa padrão
+  if (!data || data.length === 0) {
+    return DEFAULT_CARDS;
+  }
+
+  return data;
 }
 
 export async function saveCards(cards: CardInfo[]) {
