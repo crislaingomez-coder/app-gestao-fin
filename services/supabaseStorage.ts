@@ -19,7 +19,17 @@ export async function getCards(): Promise<CardInfo[]> {
     return DEFAULT_CARDS;
   }
 
-  return data || [];
+  if (!data || data.length === 0) {
+    return DEFAULT_CARDS;
+  }
+
+  return data.map((c) => ({
+    id: c.id,
+    name: c.name,
+    bestDay: c.best_day,   // ← coluna correta
+    dueDay: c.due_day,     // ← coluna correta
+    color: c.color,
+  }));
 }
 
 export async function saveCards(cards: CardInfo[]) {
@@ -28,8 +38,8 @@ export async function saveCards(cards: CardInfo[]) {
   const rows = cards.map((c) => ({
     id: c.id,
     name: c.name,
-    bestday: c.bestDay,
-    dueday: c.dueDay,
+    best_day: c.bestDay,    // ← corrigido
+    due_day: c.dueDay,      // ← corrigido
     color: c.color,
     user_id: FIXED_USER_ID,
     created_at: c.created_at || new Date().toISOString(),
@@ -43,9 +53,14 @@ export async function saveCards(cards: CardInfo[]) {
 }
 
 export async function deleteCard(id: string) {
-  const { error } = await supabase.from("cards").delete().eq("id", id);
+  const { error } = await supabase
+    .from("cards")
+    .delete()
+    .eq("id", id);
+
   if (error) console.error("Erro ao deletar cartão:", error);
 }
+
 
 // ==========================================================
 // CATEGORIES
@@ -82,12 +97,17 @@ export async function saveCategories(categories: string[]) {
 }
 
 export async function deleteCategory(name: string) {
-  const { error } = await supabase.from("categories").delete().eq("name", name);
+  const { error } = await supabase
+    .from("categories")
+    .delete()
+    .eq("name", name);
+
   if (error) console.error("Erro ao deletar categoria:", error);
 }
 
+
 // ==========================================================
-// TRANSACTIONS (GASTOS)
+// TRANSACTIONS
 // ==========================================================
 export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
@@ -128,8 +148,9 @@ export async function deleteTransaction(id: string) {
   if (error) console.error("Erro ao deletar transação:", error);
 }
 
+
 // ==========================================================
-// PAYMENTS (PAGAMENTOS)
+// PAYMENTS
 // ==========================================================
 export async function getPayments() {
   const { data, error } = await supabase
@@ -161,7 +182,6 @@ export async function savePayments(payments: any[]) {
   if (error) console.error("Erro ao salvar pagamentos:", error);
 }
 
-// ✅ ESTA PARTE AQUI É A CORREÇÃO QUE RESOLVE O ERRO DO VERCEL
 export async function deletePayment(id: string) {
   const { error } = await supabase
     .from("payments")
