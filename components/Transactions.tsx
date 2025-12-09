@@ -5,7 +5,7 @@ import { Plus, Trash2, CreditCard, Check, X, Tag, Pencil, Search, FileText, Chec
 import MonthPicker from './MonthPicker';
 import DatePicker from './DatePicker';
 
-// DELETE Supabase
+// DELETE
 import { deleteTransaction, deletePayment } from "../services/supabaseStorage";
 
 const generateId = (): string => Math.random().toString(36).substr(2, 9);
