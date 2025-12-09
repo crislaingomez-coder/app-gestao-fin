@@ -28,8 +28,8 @@ export async function saveCards(cards: CardInfo[]) {
   const rows = cards.map((c) => ({
     id: c.id,
     name: c.name,
-    bestDay: c.bestDay,
-    dueDay: c.dueDay,
+    bestday: c.bestDay,   // <- corrigido
+    dueday: c.dueDay,     // <- corrigido
     color: c.color,
     user_id: FIXED_USER_ID,
     created_at: c.created_at || new Date().toISOString(),
@@ -63,6 +63,7 @@ export async function saveCategories(categories: string[]) {
   if (!categories || categories.length === 0) return;
 
   const rows = categories.map((name) => ({
+    id: crypto.randomUUID(), // <- corrigido
     name,
     user_id: FIXED_USER_ID,
     created_at: new Date().toISOString(),
