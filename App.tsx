@@ -11,10 +11,14 @@ import {
   getCards,
   saveCards,
   getCategories,
-  saveCategories
+  saveCategories,
+  deleteTransaction,
+  deleteCard,
+  deleteCategory
 } from "./services/supabaseStorage";
 
 import { getCurrentMonthStr } from './constants';
+
 
 // =======================================================
 // LOGO SVG
@@ -30,6 +34,7 @@ const Logo = ({ className }: { className?: string }) => (
   </svg>
 );
 
+
 // =======================================================
 // APP
 // =======================================================
@@ -42,30 +47,27 @@ const App: React.FC = () => {
   const [cards, setCards] = useState<CardInfo[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
 
-  // ======================================================
-  // FUNÇÃO ADICIONADA → NECESSÁRIA PARA Transactions.tsx
-  // ======================================================
+
+  // CONFIRMAÇÃO (necessário para Transactions.tsx)
   const onRequestConfirm = (msg: string, onConfirm: () => void) => {
     if (window.confirm(msg)) onConfirm();
   };
+
 
   // ======================================================
   // LOAD INITIAL DATA (SUPABASE)
   // ======================================================
   useEffect(() => {
     (async () => {
-      const trx = await getTransactions();
-      const crd = await getCards();
-      const cat = await getCategories();
-
-      setTransactions(trx);
-      setCards(crd);
-      setCategories(cat);
+      setTransactions(await getTransactions());
+      setCards(await getCards());
+      setCategories(await getCategories());
     })();
   }, []);
 
+
   // ======================================================
-  // SAVE UPDATES
+  // SAVE CHANGES
   // ======================================================
   useEffect(() => {
     if (transactions.length > 0) saveTransactions(transactions);
@@ -79,9 +81,12 @@ const App: React.FC = () => {
     if (categories.length > 0) saveCategories(categories);
   }, [categories]);
 
+
   // ======================================================
-  // HANDLERS (mesma lógica)
+  // HANDLERS — com DELETE REAL no Supabase
   // ======================================================
+
+  // ADD
   const handleAddTransaction = (newTransactions: Transaction[]) => {
     setTransactions(prev => {
       const updated = [...prev, ...newTransactions];
@@ -90,16 +95,20 @@ const App: React.FC = () => {
     });
   };
 
-  const handleDeleteTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
+  // DELETE TRANSACTION (gastos)
+  const handleDeleteTransaction = async (id: string) => {
+    await deleteTransaction(id);              // remove no Supabase
+    setTransactions(prev => prev.filter(t => t.id !== id)); // remove local
   };
 
+  // UPDATE
   const handleUpdateTransactions = (updates: Transaction[]) => {
     setTransactions(prev =>
       prev.map(t => updates.find(u => u.id === t.id) ?? t)
     );
   };
 
+  // ADD CARD
   const handleAddCard = (c: CardInfo) => {
     setCards(prev => {
       const updated = [...prev, c];
@@ -108,14 +117,18 @@ const App: React.FC = () => {
     });
   };
 
+  // EDIT CARD
   const handleEditCard = (updatedCard: CardInfo) => {
     setCards(prev => prev.map(c => (c.id === updatedCard.id ? updatedCard : c)));
   };
 
-  const handleDeleteCard = (id: string) => {
+  // DELETE CARD
+  const handleDeleteCard = async (id: string) => {
+    await deleteCard(id);                       // remove no Supabase
     setCards(prev => prev.filter(c => c.id !== id));
   };
 
+  // ADD CATEGORY
   const handleAddCategory = (cat: string) => {
     if (!categories.includes(cat)) {
       const updated = [...categories, cat];
@@ -124,15 +137,13 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDeleteCategory = (cat: string) => {
+  // DELETE CATEGORY
+  const handleDeleteCategory = async (cat: string) => {
+    await deleteCategory(cat);                // remove no Supabase
     setCategories(prev => prev.filter(c => c !== cat));
   };
 
-  const handleRestoreData = (
-    newTransactions: Transaction[],
-    newCards: CardInfo[],
-    newCategories: string[]
-  ) => {
+  const handleRestoreData = (newTransactions: Transaction[], newCards: CardInfo[], newCategories: string[]) => {
     setTransactions(newTransactions);
     setCards(newCards);
     setCategories(newCategories);
@@ -146,8 +157,9 @@ const App: React.FC = () => {
     setIsPrivacyMode(prev => !prev);
   };
 
+
   // ======================================================
-  // LOGIN PAGE
+  // LOGIN
   // ======================================================
   if (screen === 'login') {
     return (
@@ -169,7 +181,6 @@ const App: React.FC = () => {
             className="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group"
           >
             <span>Entrar</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </button>
 
           <p className="mt-8 text-xs text-gray-400 font-medium">Versão 1.0.0 (PWA)</p>
@@ -178,8 +189,9 @@ const App: React.FC = () => {
     );
   }
 
+
   // ======================================================
-  // MAIN APP SCREENS
+  // MAIN SCREENS
   // ======================================================
   return (
     <Layout
@@ -208,8 +220,6 @@ const App: React.FC = () => {
           onDeleteTransaction={handleDeleteTransaction}
           onUpdateTransactions={handleUpdateTransactions}
           isPrivacyMode={isPrivacyMode}
-
-          // ✔ CORREÇÃO PARA NÃO QUEBRAR O SELECT
           onRequestConfirm={onRequestConfirm}
         />
       )}
