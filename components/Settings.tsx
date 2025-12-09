@@ -58,7 +58,7 @@ const Settings: React.FC<SettingsProps> = ({
         });
     } else {
         onAddCard({
-            id: Math.random().toString(36).substr(2, 9),
+            id: crypto.randomUUID(),   // 🔥 CORREÇÃO: UUID válido para Supabase
             name: cardName,
             bestDay: parseInt(bestDay),
             dueDay: parseInt(dueDay),
@@ -121,7 +121,6 @@ const Settings: React.FC<SettingsProps> = ({
                             type="button"
                             onClick={() => openEditCardModal(card)}
                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all bg-white rounded-full border border-gray-100 shadow-sm"
-                            title="Editar"
                         >
                             <Pencil size={18} />
                         </button>
@@ -132,11 +131,10 @@ const Settings: React.FC<SettingsProps> = ({
                                 onClick={async (e) => { 
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    await deleteCard(card.id);    // 🔥 Supabase DELETE  
-                                    onDeleteCard(card.id);         // Atualiza local
+                                    await deleteCard(card.id);    
+                                    onDeleteCard(card.id);
                                 }}
                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all bg-white rounded-full border border-gray-100 shadow-sm"
-                                title="Excluir"
                             >
                                 <Trash2 size={18} />
                             </button>
@@ -189,8 +187,8 @@ const Settings: React.FC<SettingsProps> = ({
                         type="button"
                         onClick={async (e) => { 
                             e.preventDefault();
-                            await deleteCategory(cat);    // 🔥 Supabase DELETE
-                            onDeleteCategory(cat);         // Local
+                            await deleteCategory(cat);
+                            onDeleteCategory(cat);
                         }}
                         className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-white"
                     >
