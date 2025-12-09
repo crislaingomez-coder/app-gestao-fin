@@ -117,7 +117,24 @@ export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
 
   const rows = transactions.map((t) => ({
-    ...t,
+    id: t.id,
+    description: t.description,
+    amount: t.amount,
+    date: t.date,
+    type: t.type,
+    category: t.category,
+    status: t.status,
+
+    // nomes corretos no banco
+    card_id: t.cardId || null,
+    invoice_month: t.invoiceMonth || null,
+
+    installment_current: t.installments?.current || null,
+    installment_total: t.installments?.total || null,
+    installment_group_id: t.installments?.groupId || null,
+
+    paid_amount: t.paidAmount || 0,
+
     user_id: FIXED_USER_ID,
     created_at: t.created_at || new Date().toISOString(),
   }));
@@ -160,7 +177,10 @@ export async function savePayments(payments: any[]) {
   if (!payments || payments.length === 0) return;
 
   const rows = payments.map((p) => ({
-    ...p,
+    id: p.id,
+    transaction_id: p.transactionId,
+    amount: p.amount,
+    date: p.date,
     user_id: FIXED_USER_ID,
     created_at: p.created_at || new Date().toISOString(),
   }));
