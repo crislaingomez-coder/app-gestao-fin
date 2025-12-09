@@ -14,7 +14,11 @@ export async function getCards(): Promise<CardInfo[]> {
     .select("*")
     .order("created_at");
 
-  if (error) return DEFAULT_CARDS;
+  if (error) {
+    console.error("Erro ao carregar cards:", error);
+    return DEFAULT_CARDS;
+  }
+
   return data || [];
 }
 
@@ -31,11 +35,16 @@ export async function saveCards(cards: CardInfo[]) {
     created_at: c.created_at || new Date().toISOString(),
   }));
 
-  await supabase.from("cards").upsert(rows, { onConflict: "id" });
+  const { error } = await supabase
+    .from("cards")
+    .upsert(rows, { onConflict: "id" });
+
+  if (error) console.error("Erro ao salvar cards:", error);
 }
 
 export async function deleteCard(id: string) {
-  await supabase.from("cards").delete().eq("id", id);
+  const { error } = await supabase.from("cards").delete().eq("id", id);
+  if (error) console.error("Erro ao deletar cartão:", error);
 }
 
 // ==========================================================
@@ -47,7 +56,11 @@ export async function getCategories(): Promise<string[]> {
     .select("*")
     .order("name");
 
-  if (error) return DEFAULT_CATEGORIES;
+  if (error) {
+    console.error("Erro ao carregar categorias:", error);
+    return DEFAULT_CATEGORIES;
+  }
+
   return data?.map((c) => c.name) ?? DEFAULT_CATEGORIES;
 }
 
@@ -61,11 +74,16 @@ export async function saveCategories(categories: string[]) {
     created_at: new Date().toISOString(),
   }));
 
-  await supabase.from("categories").upsert(rows, { onConflict: "name" });
+  const { error } = await supabase
+    .from("categories")
+    .upsert(rows, { onConflict: "name" });
+
+  if (error) console.error("Erro ao salvar categorias:", error);
 }
 
 export async function deleteCategory(name: string) {
-  await supabase.from("categories").delete().eq("name", name);
+  const { error } = await supabase.from("categories").delete().eq("name", name);
+  if (error) console.error("Erro ao deletar categoria:", error);
 }
 
 // ==========================================================
@@ -77,7 +95,11 @@ export async function getTransactions(): Promise<Transaction[]> {
     .select("*")
     .order("created_at");
 
-  if (error) return [];
+  if (error) {
+    console.error("Erro ao carregar transações:", error);
+    return [];
+  }
+
   return data || [];
 }
 
@@ -93,15 +115,15 @@ export async function saveTransactions(transactions: Transaction[]) {
     category: t.category,
     status: t.status,
 
-    // nomes corretos no banco
-    card_id: t.cardId ?? null,
-    invoice_month: t.invoiceMonth ?? null,
+    // nomes corretos do banco
+    card_id: t.cardId || null,
+    invoice_month: t.invoiceMonth || null,
 
-    installment_current: t.installments?.current ?? null,
-    installment_total: t.installments?.total ?? null,
-    installment_group_id: t.installments?.groupId ?? null,
+    installment_current: t.installments?.current || null,
+    installment_total: t.installments?.total || null,
+    installment_group_id: t.installments?.groupId || null,
 
-    paid_amount: t.paidAmount ?? 0,
+    paid_amount: t.paidAmount || 0,
 
     user_id: FIXED_USER_ID,
     created_at: t.created_at || new Date().toISOString(),
@@ -114,6 +136,11 @@ export async function saveTransactions(transactions: Transaction[]) {
   if (error) console.error("Erro ao salvar transações:", error);
 }
 
+export async function deleteTransaction(id: string) {
+  const { error } = await supabase.from("transactions").delete().eq("id", id);
+  if (error) console.error("Erro ao deletar transação:", error);
+}
+
 // ==========================================================
 // PAYMENTS
 // ==========================================================
@@ -123,7 +150,11 @@ export async function getPayments() {
     .select("*")
     .order("created_at");
 
-  if (error) return [];
+  if (error) {
+    console.error("Erro ao carregar pagamentos:", error);
+    return [];
+  }
+
   return data || [];
 }
 
@@ -147,5 +178,6 @@ export async function savePayments(payments: any[]) {
 }
 
 export async function deletePayment(id: string) {
-  await supabase.from("payments").delete().eq("id", id);
+  const { error } = await supabase.from("payments").delete().eq("id", id);
+  if (error) console.error("Erro ao deletar pagamento:", error);
 }
