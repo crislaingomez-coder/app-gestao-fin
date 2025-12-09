@@ -43,9 +43,14 @@ export async function saveCards(cards: CardInfo[]) {
 }
 
 export async function deleteCard(id: string) {
-  const { error } = await supabase.from("cards").delete().eq("id", id);
+  const { error } = await supabase
+    .from("cards")
+    .delete()
+    .eq("id", id);
+
   if (error) console.error("Erro ao deletar cartão:", error);
 }
+
 
 // ==========================================================
 // CATEGORIES
@@ -82,9 +87,14 @@ export async function saveCategories(categories: string[]) {
 }
 
 export async function deleteCategory(name: string) {
-  const { error } = await supabase.from("categories").delete().eq("name", name);
+  const { error } = await supabase
+    .from("categories")
+    .delete()
+    .eq("name", name);
+
   if (error) console.error("Erro ao deletar categoria:", error);
 }
+
 
 // ==========================================================
 // TRANSACTIONS
@@ -115,7 +125,7 @@ export async function saveTransactions(transactions: Transaction[]) {
     category: t.category,
     status: t.status,
 
-    // nomes corretos do banco
+    // nomes corretos no banco
     card_id: t.cardId || null,
     invoice_month: t.invoiceMonth || null,
 
@@ -137,9 +147,14 @@ export async function saveTransactions(transactions: Transaction[]) {
 }
 
 export async function deleteTransaction(id: string) {
-  const { error } = await supabase.from("transactions").delete().eq("id", id);
+  const { error } = await supabase
+    .from("transactions")
+    .delete()
+    .eq("id", id);
+
   if (error) console.error("Erro ao deletar transação:", error);
 }
+
 
 // ==========================================================
 // PAYMENTS
@@ -178,6 +193,10 @@ export async function savePayments(payments: any[]) {
 }
 
 export async function deletePayment(id: string) {
-  const { error } = await supabase.from("payments").delete().eq("id", id);
+  const { error } = await supabase
+    .from("payments")
+    .delete()
+    .eq("id", id);
+
   if (error) console.error("Erro ao deletar pagamento:", error);
 }
