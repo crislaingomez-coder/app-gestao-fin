@@ -115,19 +115,22 @@ export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
 
   const rows = transactions.map((t) => {
-    // REMOVER CAMPOS QUE NÃO EXISTEM NO SUPABASE
-    const { payments, installments, ...rest } = t;
+    // REMOVER payments, installments E cardId PARA NÃO QUEBRAR O SUPABASE
+    const { payments, installments, cardId, ...rest } = t;
 
     return {
       ...rest,
-      card_id: t.cardId || null,
+
+      // nomes corretos do banco
+      card_id: cardId || null,
       invoice_month: t.invoiceMonth || null,
 
-      installment_current: t.installments?.current || null,
-      installment_total: t.installments?.total || null,
-      installment_group_id: t.installments?.groupId || null,
+      installment_current: installments?.current || null,
+      installment_total: installments?.total || null,
+      installment_group_id: installments?.groupId || null,
 
       paid_amount: t.paidAmount || 0,
+
       user_id: FIXED_USER_ID,
       created_at: t.created_at || new Date().toISOString(),
     };
