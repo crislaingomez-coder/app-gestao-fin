@@ -5,7 +5,7 @@ import { Trash2, Plus, CreditCard, Tag, X, Pencil, Save } from 'lucide-react';
 interface SettingsProps {
   cards: CardInfo[];
   categories: string[];
-  transactions: Transaction[]; // Needed if we ever add backup back
+  transactions: Transaction[];
   onAddCard: (card: CardInfo) => void;
   onEditCard: (card: CardInfo) => void;
   onDeleteCard: (id: string) => void;
@@ -17,16 +17,13 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ 
     cards, categories, onAddCard, onEditCard, onDeleteCard, onAddCategory, onDeleteCategory 
 }) => {
-  // Card Modal State
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<CardInfo | null>(null);
   
-  // Form State
   const [cardName, setCardName] = useState('');
   const [bestDay, setBestDay] = useState('1');
   const [dueDay, setDueDay] = useState('10');
 
-  // Category State
   const [newCategory, setNewCategory] = useState('');
 
   const openAddCardModal = () => {
@@ -49,7 +46,6 @@ const Settings: React.FC<SettingsProps> = ({
     e.preventDefault();
     
     if (editingCard) {
-        // Edit Mode
         onEditCard({
             ...editingCard,
             name: cardName,
@@ -57,13 +53,13 @@ const Settings: React.FC<SettingsProps> = ({
             dueDay: parseInt(dueDay)
         });
     } else {
-        // Add Mode
+        // 🔥 CORREÇÃO AQUI: UUID VÁLIDO PARA SUPABASE
         onAddCard({
-            id: Math.random().toString(36).substr(2, 9),
+            id: crypto.randomUUID(),
             name: cardName,
             bestDay: parseInt(bestDay),
             dueDay: parseInt(dueDay),
-            color: '#000000' // Default color
+            color: '#000000'
         });
     }
     
@@ -83,7 +79,6 @@ const Settings: React.FC<SettingsProps> = ({
     <div className="space-y-6 pb-20">
       <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Configurações</h2>
       
-      {/* --- CARDS SECTION --- */}
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
             <h3 className="font-bold text-lg flex items-center gap-2 text-gray-800">
@@ -142,7 +137,6 @@ const Settings: React.FC<SettingsProps> = ({
         </div>
       </div>
 
-      {/* --- CATEGORIES SECTION --- */}
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
         <h3 className="font-bold text-lg flex items-center gap-2 text-gray-800 mb-6">
             <div className="bg-orange-100 p-2 rounded-xl text-orange-600">
@@ -188,7 +182,6 @@ const Settings: React.FC<SettingsProps> = ({
         </div>
       </div>
 
-      {/* --- ADD/EDIT CARD MODAL --- */}
       {isCardModalOpen && (
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-[2px]">
               <div className="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-scale-in">
