@@ -59,22 +59,25 @@ const App: React.FC = () => {
     })();
   }, []);
 
-  // SAVE DATA
+  // SAVE DATA AUTOMATICALLY
   useEffect(() => { saveTransactions(transactions); }, [transactions]);
   useEffect(() => { saveCards(cards); }, [cards]);
   useEffect(() => { saveCategories(categories); }, [categories]);
 
   // HANDLERS
-  const handleAddTransaction = (t: Transaction) =>
-  setTransactions(prev => [...prev, t]);
+  const handleAddTransaction = (t: Transaction | Transaction[]) =>
+    setTransactions(prev => [...prev, ...(Array.isArray(t) ? t : [t])]);
+
   const handleDeleteTransaction = async (id: string) => {
     await deleteTransaction(id);
     setTransactions(prev => prev.filter(t => t.id !== id));
   };
+
   const handleUpdateTransactions = (updates: Transaction[]) => {
     setTransactions(prev => prev.map(t => updates.find(u => u.id === t.id) ?? t));
   };
 
+  // CARDS
   const handleAddCard = (c: CardInfo) => setCards(prev => [...prev, c]);
   const handleEditCard = (c: CardInfo) => setCards(prev => prev.map(x => x.id === c.id ? c : x));
   const handleDeleteCard = async (id: string) => {
@@ -82,6 +85,7 @@ const App: React.FC = () => {
     setCards(prev => prev.filter(c => c.id !== id));
   };
 
+  // CATEGORIES
   const handleAddCategory = (c: string) => {
     if (!categories.includes(c)) setCategories(prev => [...prev, c]);
   };
@@ -103,7 +107,6 @@ const App: React.FC = () => {
   if (screen === 'login') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 relative overflow-hidden">
-
         <div className="absolute top-[-10%] right-[-10%] w-[50vh] h-[50vh] bg-blue-200/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-[40vh] h-[40vh] bg-orange-200/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
 
