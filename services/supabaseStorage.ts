@@ -51,7 +51,6 @@ export async function deleteCard(id: string) {
   if (error) console.error("Erro ao deletar cartão:", error);
 }
 
-
 // ==========================================================
 // CATEGORIES
 // ==========================================================
@@ -95,7 +94,6 @@ export async function deleteCategory(name: string) {
   if (error) console.error("Erro ao deletar categoria:", error);
 }
 
-
 // ==========================================================
 // TRANSACTIONS
 // ==========================================================
@@ -125,7 +123,6 @@ export async function saveTransactions(transactions: Transaction[]) {
     category: t.category,
     status: t.status,
 
-    // nomes corretos no banco
     card_id: t.cardId || null,
     invoice_month: t.invoiceMonth || null,
 
@@ -133,7 +130,7 @@ export async function saveTransactions(transactions: Transaction[]) {
     installment_total: t.installments?.total || null,
     installment_group_id: t.installments?.groupId || null,
 
-    paid_amount: t.paidAmount || 0,
+    paid_amount: t.paidAmount ?? 0,
 
     user_id: FIXED_USER_ID,
     created_at: t.created_at || new Date().toISOString(),
@@ -154,7 +151,6 @@ export async function deleteTransaction(id: string) {
 
   if (error) console.error("Erro ao deletar transação:", error);
 }
-
 
 // ==========================================================
 // PAYMENTS
@@ -181,6 +177,7 @@ export async function savePayments(payments: any[]) {
     transaction_id: p.transactionId,
     amount: p.amount,
     date: p.date,
+
     user_id: FIXED_USER_ID,
     created_at: p.created_at || new Date().toISOString(),
   }));
