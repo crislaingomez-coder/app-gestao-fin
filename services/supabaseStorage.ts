@@ -43,9 +43,14 @@ export async function saveCards(cards: CardInfo[]) {
 }
 
 export async function deleteCard(id: string) {
-  const { error } = await supabase.from("cards").delete().eq("id", id);
+  const { error } = await supabase
+    .from("cards")
+    .delete()
+    .eq("id", id);
+
   if (error) console.error("Erro ao deletar cartão:", error);
 }
+
 
 // ==========================================================
 // CATEGORIES
@@ -82,12 +87,17 @@ export async function saveCategories(categories: string[]) {
 }
 
 export async function deleteCategory(name: string) {
-  const { error } = await supabase.from("categories").delete().eq("name", name);
+  const { error } = await supabase
+    .from("categories")
+    .delete()
+    .eq("name", name);
+
   if (error) console.error("Erro ao deletar categoria:", error);
 }
 
+
 // ==========================================================
-// TRANSACTIONS (GASTOS)
+// TRANSACTIONS
 // ==========================================================
 export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
@@ -128,8 +138,9 @@ export async function deleteTransaction(id: string) {
   if (error) console.error("Erro ao deletar transação:", error);
 }
 
+
 // ==========================================================
-// PAYMENTS (PAGAMENTOS)
+// PAYMENTS
 // ==========================================================
 export async function getPayments() {
   const { data, error } = await supabase
@@ -161,7 +172,6 @@ export async function savePayments(payments: any[]) {
   if (error) console.error("Erro ao salvar pagamentos:", error);
 }
 
-// ✅ ESTA PARTE AQUI É A CORREÇÃO QUE RESOLVE O ERRO DO VERCEL
 export async function deletePayment(id: string) {
   const { error } = await supabase
     .from("payments")
