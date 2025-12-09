@@ -65,7 +65,8 @@ const App: React.FC = () => {
   useEffect(() => { saveCategories(categories); }, [categories]);
 
   // HANDLERS
-  const handleAddTransaction = (t: Transaction[]) => setTransactions(prev => [...prev, ...t]);
+  const handleAddTransaction = (t: Transaction) =>
+  setTransactions(prev => [...prev, t]);
   const handleDeleteTransaction = async (id: string) => {
     await deleteTransaction(id);
     setTransactions(prev => prev.filter(t => t.id !== id));
