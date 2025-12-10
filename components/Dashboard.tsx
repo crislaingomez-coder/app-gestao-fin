@@ -114,7 +114,6 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
 
   // --- MONTHLY VIEW CALCULATIONS ---
   const monthlyData = useMemo(() => {
-    // Filter transactions relevant to this view (Invoice month for cards, Date for fixed)
     const monthTransactions = transactions.filter(t => {
       if (t.type === TransactionType.CREDIT_CARD) {
         return t.invoiceMonth === selectedMonth;
@@ -134,7 +133,6 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
             : (t.paidAmount || 0);
 
       totalDebt += amount;
-      
       totalPaid += actualPaid;
       
       const remaining = Math.max(0, amount - actualPaid);
@@ -166,7 +164,6 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
         name, value
     })).sort((a,b) => b.value - a.value);
 
-    // Projection Logic (Next 6 months relative to selected month)
     const projectionData = [];
     const [startYear, startMonth] = selectedMonth.split('-').map(Number);
     
@@ -229,7 +226,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
          </div>
       </div>
 
-      {/* --- TOP BAR: MONTH SELECTOR WITH ARROWS (Only in Monthly Mode) --- */}
+      {/* --- TOP BAR --- */}
       {viewMode === 'monthly' && (
         <div className="flex flex-col items-center gap-4 animate-scale-in">
              <div className="flex items-center justify-between w-full max-w-xs bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
@@ -280,7 +277,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
           amount={activeData.totalPending} 
           bg="bg-orange-500" 
           textColor="text-white" 
-          subtitle={viewMode === 'general' ? "Total a pagar futuro" : "Restante do mês"}
+          subtitle={viewMode=== 'general' ? "Total a pagar futuro" : "Restante do mês"}
           isPrivacyMode={isPrivacyMode}
         />
         <SummaryCard 
@@ -288,113 +285,10 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
           amount={activeData.totalPaid} 
           bg="bg-green-600" 
           textColor="text-white" 
-          subtitle={viewMode === 'general' ? "Total já pago" : "Pago neste mês"}
+          subtitle={viewMode=== 'general' ? "Total já pago" : "Pago neste mês"}
           isPrivacyMode={isPrivacyMode}
         />
       </div>
 
       {/* --- PROJECTION CHART --- */}
-       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
-        <h3 className="text-gray-800 font-bold mb-1 flex items-center gap-2">
-            <BarChart3 size={20} className="text-blue-600"/>
-            {viewMode === 'general' ? 'Projeção de Dívida (12 Meses)' : 'Projeção (Dívida Cartão + Fixas Parc.)'}
-        </h3>
-        <p className="text-xs text-gray-400 mb-4 ml-7">
-            {viewMode === 'general' ? 'Estimativa de gastos para o próximo ano.' : 'Soma das parcelas futuras agendadas.'}
-        </p>
-        
-        {/* FIX: Explicit style dimensions to fix width(-1) error */}
-        <div style={{ width: '100%', height: '300px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart layout="vertical" data={activeData.projectionData} margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
-                <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={50} tick={{fill: '#6b7280', fontWeight: 600}} />
-                <Tooltip 
-                    cursor={{fill: '#f3f4f6'}}
-                    formatter={(value: number) => [isPrivacyMode ? '****' : formatCurrency(value), 'Valor Previsto']}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="value" barSize={16} radius={[0, 4, 4, 0]}>
-                    {activeData.projectionData.map((entry, index) => (
-                         <Cell key={`cell-${index}`} fill={index === 0 ? COLORS.blue : '#93C5FD'} className={isPrivacyMode ? 'privacy-hidden' : ''} />
-                    ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* --- CHARTS ROW --- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0">
-          {/* Category Chart */}
-          <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
-            <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Categoria</h3>
-            <div style={{ width: '100%', height: '300px' }}>
-              {activeData.categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={activeData.categoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} />
-                    <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => isPrivacyMode ? '****' : `R$${val}`} tick={{fill: '#9ca3af'}} />
-                    <Tooltip 
-                        cursor={{fill: 'transparent'}}
-                        formatter={(value: number) => [isPrivacyMode ? '****' : formatCurrency(value), 'Valor']}
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                        {activeData.categoryData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS.blue} className={isPrivacyMode ? 'privacy-hidden' : ''} />
-                        ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400 text-sm">Sem dados</div>
-              )}
-            </div>
-          </div>
-
-          {/* Card Chart */}
-          <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
-            <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Cartão / Conta</h3>
-            <div style={{ width: '100%', height: '300px' }}>
-               {activeData.cardData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={activeData.cardData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} />
-                    <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => isPrivacyMode ? '****' : `R$${val}`} tick={{fill: '#9ca3af'}} />
-                    <Tooltip 
-                        cursor={{fill: 'transparent'}}
-                        formatter={(value: number) => [isPrivacyMode ? '****' : formatCurrency(value), 'Valor']}
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                        {activeData.cardData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS.red} className={isPrivacyMode ? 'privacy-hidden' : ''} />
-                        ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-               ) : (
-                 <div className="flex items-center justify-center h-full text-gray-400 text-sm">Sem gastos por cartão</div>
-               )}
-            </div>
-          </div>
-      </div>
-
-    </div>
-  );
-};
-
-const SummaryCard = ({ title, amount, bg, textColor, subtitle, isPrivacyMode }: any) => (
-  <div className={`${bg} rounded-3xl p-5 shadow-lg shadow-gray-200/50 flex flex-col justify-center items-start min-h-[100px] overflow-hidden w-full`}>
-    <span className={`${textColor} text-opacity-80 text-[10px] font-bold uppercase tracking-wider mb-1`}>{title}</span>
-    <div className="w-full relative" title={isPrivacyMode ? '' : formatCurrency(amount)}>
-         <span className={`${textColor} text-base sm:text-2xl font-black tracking-tight whitespace-nowrap block truncate ${isPrivacyMode ? 'privacy-hidden' : ''}`}>
-            {isPrivacyMode ? '****' : formatCurrency(amount)}
-        </span>
-    </div>
-    {subtitle && <span className={`${textColor} text-opacity-75 text-[10px] mt-1.5 font-medium leading-tight truncate w-full`}>{subtitle}</span>}
-  </div>
-);
-
-export default Dashboard;
+       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray ਦੇੜhug
