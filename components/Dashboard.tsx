@@ -266,13 +266,13 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
       )}
 
       {/* --- SUMMARY CARDS --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         <SummaryCard 
-          title={viewMode === 'general' ? "Total Acumulado" : "Total (Mês)"}
+          title={viewMode === 'general' ? "Total" : "Total Mês"}
           amount={activeData.totalDebt} 
           bg="bg-red-600" 
           textColor="text-white"
-          subtitle={viewMode === 'general' ? "Histórico + Futuro" : "Dívida total do mês"}
+          subtitle={viewMode === 'general' ? "Geral" : "Dívida"}
           isPrivacyMode={isPrivacyMode}
         />
         <SummaryCard 
@@ -280,7 +280,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
           amount={activeData.totalPending} 
           bg="bg-orange-500" 
           textColor="text-white" 
-          subtitle={viewMode === 'general' ? "Total a pagar futuro" : "Restante do mês"}
+          subtitle="Restante"
           isPrivacyMode={isPrivacyMode}
         />
         <SummaryCard 
@@ -288,7 +288,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
           amount={activeData.totalPaid} 
           bg="bg-green-600" 
           textColor="text-white" 
-          subtitle={viewMode === 'general' ? "Total já pago" : "Pago neste mês"}
+          subtitle="Realizado"
           isPrivacyMode={isPrivacyMode}
         />
       </div>
@@ -297,14 +297,14 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
        <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
         <h3 className="text-gray-800 font-bold mb-1 flex items-center gap-2">
             <BarChart3 size={20} className="text-blue-600"/>
-            {viewMode === 'general' ? 'Projeção de Dívida (12 Meses)' : 'Projeção (Dívida Cartão + Fixas Parc.)'}
+            {viewMode === 'general' ? 'Projeção (12 Meses)' : 'Projeção (6 Meses)'}
         </h3>
         <p className="text-xs text-gray-400 mb-4 ml-7">
-            {viewMode === 'general' ? 'Estimativa de gastos para o próximo ano.' : 'Soma das parcelas futuras agendadas.'}
+            {viewMode === 'general' ? 'Estimativa futura.' : 'Parcelas futuras.'}
         </p>
         
-        {/* FIX: Explicit style dimensions to fix width(-1) error */}
-        <div style={{ width: '100%', height: '300px' }}>
+        {/* FIX: Width(-1) Error -> Explicit relative position and dimensions */}
+        <div style={{ width: '100%', height: 300, position: 'relative', minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart layout="vertical" data={activeData.projectionData} margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
                 <XAxis type="number" hide />
@@ -329,7 +329,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
           {/* Category Chart */}
           <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
             <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Categoria</h3>
-            <div style={{ width: '100%', height: '300px' }}>
+            <div style={{ width: '100%', height: 300, position: 'relative', minWidth: 0 }}>
               {activeData.categoryData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activeData.categoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -356,7 +356,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
           {/* Card Chart */}
           <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
             <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Cartão / Conta</h3>
-            <div style={{ width: '100%', height: '300px' }}>
+            <div style={{ width: '100%', height: 300, position: 'relative', minWidth: 0 }}>
                {activeData.cardData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activeData.cardData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -386,14 +386,14 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
 };
 
 const SummaryCard = ({ title, amount, bg, textColor, subtitle, isPrivacyMode }: any) => (
-  <div className={`${bg} rounded-3xl p-5 shadow-lg shadow-gray-200/50 flex flex-col justify-between items-start min-h-[110px] w-full`}>
-    <span className={`${textColor} text-opacity-90 text-[11px] font-bold uppercase tracking-wider mb-0.5`}>{title}</span>
-    <div className="w-full py-1">
-         <span className={`${textColor} text-3xl sm:text-4xl font-black tracking-tighter leading-none break-words ${isPrivacyMode ? 'privacy-hidden' : ''}`}>
+  <div className={`${bg} rounded-3xl p-3 shadow-lg shadow-gray-200/50 flex flex-col justify-center items-start min-h-[90px] w-full overflow-hidden relative`}>
+    <span className={`${textColor} text-opacity-90 text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate w-full`}>{title}</span>
+    <div className="w-full relative z-10">
+         <span className={`${textColor} text-lg sm:text-2xl font-bold tracking-tighter leading-tight break-words whitespace-normal ${isPrivacyMode ? 'privacy-hidden' : ''}`}>
             {isPrivacyMode ? '****' : formatCurrency(amount)}
         </span>
     </div>
-    {subtitle && <span className={`${textColor} text-opacity-80 text-[10px] font-medium leading-tight`}>{subtitle}</span>}
+    {subtitle && <span className={`${textColor} text-opacity-80 text-[9px] font-medium leading-tight mt-0.5 truncate w-full`}>{subtitle}</span>}
   </div>
 );
 
