@@ -115,13 +115,11 @@ export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
 
   const rows = transactions.map((t) => {
-    // REMOVER payments, installments E cardId PARA NÃO QUEBRAR O SUPABASE
     const { payments, installments, cardId, ...rest } = t;
 
     return {
       ...rest,
 
-      // nomes corretos do banco
       card_id: cardId || null,
       invoice_month: t.invoiceMonth || null,
 
@@ -135,6 +133,10 @@ export async function saveTransactions(transactions: Transaction[]) {
       created_at: t.created_at || new Date().toISOString(),
     };
   });
+
+  // 🔥🔥🔥 **ÚNICA MODIFICAÇÃO QUE VOCÊ PRECISA**
+  console.log("ROWS ENVIADOS PARA O SUPABASE:", JSON.stringify(rows, null, 2));
+  // 🔥🔥🔥
 
   const { error } = await supabase
     .from("transactions")
