@@ -114,13 +114,20 @@ export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
 
   const rows = transactions.map((t) => {
-    // REMOVER payments, installments, cardId, invoiceMonth para não quebrar o Supabase
-    const { payments, installments, cardId, invoiceMonth, ...rest } = t;
+    // REMOÇÃO DEFINITIVA dos campos que NÃO EXISTEM no banco:
+    const {
+      payments,
+      installments,
+      cardId,
+      invoiceMonth,
+      paidAmount,   // <- removido antes do rest
+      ...rest
+    } = t;
 
     return {
       ...rest,
 
-      // nomes corretos das colunas
+      // colunas corretas do Supabase
       card_id: cardId || null,
       invoice_month: invoiceMonth || null,
 
@@ -128,7 +135,7 @@ export async function saveTransactions(transactions: Transaction[]) {
       installment_total: installments?.total || null,
       installment_group_id: installments?.groupId || null,
 
-      paid_amount: t.paidAmount || 0,
+      paid_amount: paidAmount || 0,
 
       user_id: FIXED_USER_ID,
       created_at: t.created_at || new Date().toISOString(),
