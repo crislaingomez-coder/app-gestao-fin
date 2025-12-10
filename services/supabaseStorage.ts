@@ -1,9 +1,9 @@
-// services/supabaseStorage.ts
 import { supabase } from "./supabaseClient";
-import { Transaction, CardInfo } from "../types";
+import { Transaction, CardInfo, PaymentRecord } from "../types";
 import { DEFAULT_CARDS, DEFAULT_CATEGORIES } from "../constants";
 
 const FIXED_USER_ID = "00000000-0000-0000-0000-000000000000";
+
 
 // ==========================================================
 // CARDS
@@ -97,12 +97,12 @@ export async function deleteCategory(name: string) {
 
 
 // ==========================================================
-// TRANSACTIONS (CORRIGIDO — AGORA APARECE NO APP)
+// TRANSACTIONS (COM PAYMENTS CORRIGIDO)
 // ==========================================================
 export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
     .from("transactions")
-    .select("*")
+    .select("*, payments:payments(*)")   // ← JOIN COM PAYMENTS
     .order("created_at");
 
   if (error || !data) {
@@ -110,15 +110,11 @@ export async function getTransactions(): Promise<Transaction[]> {
     return [];
   }
 
-  // AQUI ESTÁ A CORREÇÃO QUE FAZ AS TRANSAÇÕES APARECEREM NO APP
   return data.map((t: any) => ({
     id: t.id,
     description: t.description,
     amount: t.amount,
-
-    // Normaliza data para "YYYY-MM-DD" — ESSA LINHA CORRIGE TUDO
     date: t.date.substring(0, 10),
-
     type: t.type,
     category: t.category,
     status: t.status,
@@ -137,10 +133,18 @@ export async function getTransactions(): Promise<Transaction[]> {
           }
         : undefined,
 
+    // ✔ payments AGORA CHEGA NO APP
+    payments: t.payments?.map((p: any) => ({
+      id: p.id,
+      amount: p.amount,
+      date: p.date.substring(0, 10),
+    })) ?? [],
+
     created_at: t.created_at,
     user_id: t.user_id,
   }));
 }
+
 
 export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
@@ -162,6 +166,7 @@ export async function saveTransactions(transactions: Transaction[]) {
     installment_group_id: t.installments?.groupId || null,
 
     paid_amount: t.paidAmount || 0,
+
     user_id: FIXED_USER_ID,
     created_at: t.created_at || new Date().toISOString(),
   }));
@@ -183,6 +188,7 @@ export async function deleteTransaction(id: string) {
 }
 
 
+
 // ==========================================================
 // PAYMENTS
 // ==========================================================
@@ -200,7 +206,7 @@ export async function getPayments() {
   return data || [];
 }
 
-export async function savePayments(payments: any[]) {
+export async function savePayments(payments: PaymentRecord[]) {
   if (!payments || payments.length === 0) return;
 
   const rows = payments.map((p) => ({
