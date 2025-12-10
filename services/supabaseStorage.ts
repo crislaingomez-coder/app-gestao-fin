@@ -4,7 +4,6 @@ import { DEFAULT_CARDS, DEFAULT_CATEGORIES } from "../constants";
 
 const FIXED_USER_ID = "00000000-0000-0000-0000-000000000000";
 
-
 // ==========================================================
 // CARDS
 // ==========================================================
@@ -19,7 +18,14 @@ export async function getCards(): Promise<CardInfo[]> {
     return DEFAULT_CARDS;
   }
 
-  return data || [];
+  return data?.map((c: any) => ({
+    id: c.id,
+    name: c.name,
+    bestDay: c.bestday,
+    dueDay: c.dueday,
+    color: c.color,
+    created_at: c.created_at
+  })) ?? [];
 }
 
 export async function saveCards(cards: CardInfo[]) {
@@ -50,7 +56,6 @@ export async function deleteCard(id: string) {
 
   if (error) console.error("Erro ao deletar cartão:", error);
 }
-
 
 // ==========================================================
 // CATEGORIES
@@ -95,14 +100,16 @@ export async function deleteCategory(name: string) {
   if (error) console.error("Erro ao deletar categoria:", error);
 }
 
-
 // ==========================================================
-// TRANSACTIONS (COM PAYMENTS CORRIGIDO)
+// TRANSACTIONS + PAYMENTS (CORRIGIDO)
 // ==========================================================
 export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
     .from("transactions")
-    .select("*, payments:payments(*)")   // ← JOIN COM PAYMENTS
+    .select(`
+      *,
+      payments:payments(*)
+    `)
     .order("created_at");
 
   if (error || !data) {
@@ -113,19 +120,19 @@ export async function getTransactions(): Promise<Transaction[]> {
   return data.map((t: any) => ({
     id: t.id,
     description: t.description,
-    amount: t.amount,
-    date: t.date.substring(0, 10),
+    amount: Number(t.amount),
+    date: t.date?.substring(0, 10),
     type: t.type,
     category: t.category,
     status: t.status,
 
-    cardId: t.card_id || null,
-    invoiceMonth: t.invoice_month || null,
+    cardId: t.card_id || undefined,
+    invoiceMonth: t.invoice_month || undefined,
 
-    paidAmount: t.paid_amount ?? 0,
+    paidAmount: Number(t.paid_amount ?? 0),
 
     installments:
-      t.installment_total
+      t.installment_total && t.installment_current
         ? {
             current: t.installment_current,
             total: t.installment_total,
@@ -133,18 +140,17 @@ export async function getTransactions(): Promise<Transaction[]> {
           }
         : undefined,
 
-    // ✔ payments AGORA CHEGA NO APP
-    payments: t.payments?.map((p: any) => ({
-      id: p.id,
-      amount: p.amount,
-      date: p.date.substring(0, 10),
-    })) ?? [],
+    payments:
+      t.payments?.map((p: any) => ({
+        id: p.id,
+        amount: Number(p.amount),
+        date: p.date.substring(0, 10),
+      })) ?? [],
 
     created_at: t.created_at,
     user_id: t.user_id,
   }));
 }
-
 
 export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
@@ -165,7 +171,7 @@ export async function saveTransactions(transactions: Transaction[]) {
     installment_total: t.installments?.total || null,
     installment_group_id: t.installments?.groupId || null,
 
-    paid_amount: t.paidAmount || 0,
+    paid_amount: t.paidAmount ?? 0,
 
     user_id: FIXED_USER_ID,
     created_at: t.created_at || new Date().toISOString(),
@@ -187,25 +193,9 @@ export async function deleteTransaction(id: string) {
   if (error) console.error("Erro ao deletar transação:", error);
 }
 
-
-
 // ==========================================================
-// PAYMENTS
+// PAYMENTS (CORRIGIDO)
 // ==========================================================
-export async function getPayments() {
-  const { data, error } = await supabase
-    .from("payments")
-    .select("*")
-    .order("created_at");
-
-  if (error) {
-    console.error("Erro ao carregar pagamentos:", error);
-    return [];
-  }
-
-  return data || [];
-}
-
 export async function savePayments(payments: PaymentRecord[]) {
   if (!payments || payments.length === 0) return;
 
@@ -215,7 +205,7 @@ export async function savePayments(payments: PaymentRecord[]) {
     amount: p.amount,
     date: p.date,
     user_id: FIXED_USER_ID,
-    created_at: p.created_at || new Date().toISOString(),
+    created_at: new Date().toISOString(),
   }));
 
   const { error } = await supabase
