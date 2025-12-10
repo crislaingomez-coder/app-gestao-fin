@@ -291,4 +291,5 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
       </div>
 
       {/* --- PROJECTION CHART --- */}
-       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray ਦੇੜhug
+       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
+
