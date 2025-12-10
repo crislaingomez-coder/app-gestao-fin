@@ -51,7 +51,6 @@ export async function deleteCard(id: string) {
   if (error) console.error("Erro ao deletar cartão:", error);
 }
 
-
 // ==========================================================
 // CATEGORIES
 // ==========================================================
@@ -95,7 +94,6 @@ export async function deleteCategory(name: string) {
   if (error) console.error("Erro ao deletar categoria:", error);
 }
 
-
 // ==========================================================
 // TRANSACTIONS
 // ==========================================================
@@ -105,12 +103,37 @@ export async function getTransactions(): Promise<Transaction[]> {
     .select("*")
     .order("created_at");
 
-  if (error) {
+  if (error || !data) {
     console.error("Erro ao carregar transações:", error);
     return [];
   }
 
-  return data || [];
+  // CORREÇÃO: convertendo campos do Supabase → formato do app
+  return data.map((t: any) => ({
+    id: t.id,
+    description: t.description,
+    amount: t.amount,
+    date: t.date,
+    type: t.type,
+    category: t.category,
+    status: t.status,
+
+    cardId: t.card_id,
+    invoiceMonth: t.invoice_month,
+    paidAmount: t.paid_amount,
+
+    installments:
+      t.installment_total
+        ? {
+            current: t.installment_current,
+            total: t.installment_total,
+            groupId: t.installment_group_id,
+          }
+        : undefined,
+
+    created_at: t.created_at,
+    user_id: t.user_id,
+  }));
 }
 
 export async function saveTransactions(transactions: Transaction[]) {
@@ -125,7 +148,6 @@ export async function saveTransactions(transactions: Transaction[]) {
     category: t.category,
     status: t.status,
 
-    // nomes corretos no banco
     card_id: t.cardId || null,
     invoice_month: t.invoiceMonth || null,
 
@@ -154,7 +176,6 @@ export async function deleteTransaction(id: string) {
 
   if (error) console.error("Erro ao deletar transação:", error);
 }
-
 
 // ==========================================================
 // PAYMENTS
