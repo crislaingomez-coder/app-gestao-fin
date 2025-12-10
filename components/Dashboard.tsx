@@ -294,7 +294,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
       </div>
 
       {/* --- PROJECTION CHART --- */}
-       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full">
+       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
         <h3 className="text-gray-800 font-bold mb-1 flex items-center gap-2">
             <BarChart3 size={20} className="text-blue-600"/>
             {viewMode === 'general' ? 'Projeção de Dívida (12 Meses)' : 'Projeção (Dívida Cartão + Fixas Parc.)'}
@@ -303,9 +303,9 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
             {viewMode === 'general' ? 'Estimativa de gastos para o próximo ano.' : 'Soma das parcelas futuras agendadas.'}
         </p>
         
-        {/* FIX: Explicit dimensions & wrapper for Recharts */}
-        <div className="w-full h-[300px] min-h-[200px] min-w-[200px] relative">
-            <ResponsiveContainer width="99%" height="100%">
+        {/* FIX: Explicit style dimensions to fix width(-1) error */}
+        <div style={{ width: '100%', height: '300px' }}>
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart layout="vertical" data={activeData.projectionData} margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={50} tick={{fill: '#6b7280', fontWeight: 600}} />
@@ -325,13 +325,13 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
       </div>
 
       {/* --- CHARTS ROW --- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0">
           {/* Category Chart */}
-          <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full">
+          <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
             <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Categoria</h3>
-            <div className="w-full h-[300px] min-h-[200px] min-w-[200px] relative">
+            <div style={{ width: '100%', height: '300px' }}>
               {activeData.categoryData.length > 0 ? (
-                <ResponsiveContainer width="99%" height="100%">
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activeData.categoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} />
                     <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => isPrivacyMode ? '****' : `R$${val}`} tick={{fill: '#9ca3af'}} />
@@ -354,11 +354,11 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
           </div>
 
           {/* Card Chart */}
-          <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full">
+          <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
             <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Cartão / Conta</h3>
-            <div className="w-full h-[300px] min-h-[200px] min-w-[200px] relative">
+            <div style={{ width: '100%', height: '300px' }}>
                {activeData.cardData.length > 0 ? (
-                <ResponsiveContainer width="99%" height="100%">
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activeData.cardData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} />
                     <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => isPrivacyMode ? '****' : `R$${val}`} tick={{fill: '#9ca3af'}} />
@@ -386,12 +386,14 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
 };
 
 const SummaryCard = ({ title, amount, bg, textColor, subtitle, isPrivacyMode }: any) => (
-  <div className={`${bg} rounded-3xl p-6 shadow-lg shadow-gray-200/50 flex flex-col justify-center items-start transition-transform hover:scale-[1.02] min-h-[140px]`}>
-    <span className={`${textColor} text-opacity-90 text-xs font-bold uppercase tracking-wider mb-1`}>{title}</span>
-    <span className={`${textColor} text-3xl font-extrabold tracking-tight ${isPrivacyMode ? 'privacy-hidden' : ''}`}>
-        {isPrivacyMode ? '****' : formatCurrency(amount)}
-    </span>
-    {subtitle && <span className={`${textColor} text-opacity-75 text-[10px] mt-2 font-medium`}>{subtitle}</span>}
+  <div className={`${bg} rounded-3xl p-5 shadow-lg shadow-gray-200/50 flex flex-col justify-center items-start min-h-[100px] overflow-hidden w-full`}>
+    <span className={`${textColor} text-opacity-80 text-[10px] font-bold uppercase tracking-wider mb-1`}>{title}</span>
+    <div className="w-full relative" title={isPrivacyMode ? '' : formatCurrency(amount)}>
+         <span className={`${textColor} text-base sm:text-2xl font-black tracking-tight whitespace-nowrap block truncate ${isPrivacyMode ? 'privacy-hidden' : ''}`}>
+            {isPrivacyMode ? '****' : formatCurrency(amount)}
+        </span>
+    </div>
+    {subtitle && <span className={`${textColor} text-opacity-75 text-[10px] mt-1.5 font-medium leading-tight truncate w-full`}>{subtitle}</span>}
   </div>
 );
 
