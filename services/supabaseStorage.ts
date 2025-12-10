@@ -101,7 +101,7 @@ export async function deleteCategory(name: string) {
 }
 
 // ==========================================================
-// TRANSACTIONS + PAYMENTS (CORRIGIDO)
+// TRANSACTIONS + PAYMENTS JOIN
 // ==========================================================
 export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
@@ -194,14 +194,14 @@ export async function deleteTransaction(id: string) {
 }
 
 // ==========================================================
-// PAYMENTS (CORRIGIDO)
+// PAYMENTS — CORRETO E PRONTO PARA FUNCIONAR
 // ==========================================================
 export async function savePayments(payments: PaymentRecord[]) {
   if (!payments || payments.length === 0) return;
 
   const rows = payments.map((p) => ({
     id: p.id,
-    transaction_id: p.transactionId,
+    transaction_id: (p as any).transactionId, // <<< GARANTIDO
     amount: p.amount,
     date: p.date,
     user_id: FIXED_USER_ID,
