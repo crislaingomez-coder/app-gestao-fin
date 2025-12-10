@@ -1,3 +1,4 @@
+// services/supabaseStorage.ts
 import { supabase } from "./supabaseClient";
 import { Transaction, CardInfo } from "../types";
 import { DEFAULT_CARDS, DEFAULT_CATEGORIES } from "../constants";
@@ -34,18 +35,15 @@ export async function saveCards(cards: CardInfo[]) {
     created_at: c.created_at || new Date().toISOString(),
   }));
 
-  const { error } = await supabase
-    .from("cards")
-    .upsert(rows, { onConflict: "id" });
+  const { error } = await supabase.from("cards").upsert(rows, {
+    onConflict: "id",
+  });
 
   if (error) console.error("Erro ao salvar cards:", error);
 }
 
 export async function deleteCard(id: string) {
-  const { error } = await supabase
-    .from("cards")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("cards").delete().eq("id", id);
 
   if (error) console.error("Erro ao deletar cartão:", error);
 }
@@ -96,6 +94,8 @@ export async function deleteCategory(name: string) {
 // ==========================================================
 // TRANSACTIONS
 // ==========================================================
+
+// 🔥🔥🔥 AQUI ESTÁ A CORREÇÃO QUE FAZ AS TRANSAÇÕES APARECEREM NO APP 🔥🔥🔥
 export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
     .from("transactions")
@@ -107,36 +107,39 @@ export async function getTransactions(): Promise<Transaction[]> {
     return [];
   }
 
-  return data || [];
+  // CONVERTE snake_case → camelCase (ESSA PARTE É O QUE RESOLVE)
+  const converted = (data || []).map((t: any) => ({
+    ...t,
+    cardId: t.card_id,
+    invoiceMonth: t.invoice_month,
+    installments: t.installment_total
+      ? {
+          current: t.installment_current,
+          total: t.installment_total,
+          groupId: t.installment_group_id,
+        }
+      : undefined,
+    paidAmount: t.paid_amount,
+  }));
+
+  return converted;
 }
 
+// SALVAR (sem alterar tua lógica)
 export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
 
   const rows = transactions.map((t) => {
-    // REMOÇÃO DEFINITIVA dos campos que NÃO EXISTEM no banco:
-    const {
-      payments,
-      installments,
-      cardId,
-      invoiceMonth,
-      paidAmount,   // <- removido antes do rest
-      ...rest
-    } = t;
+    const { payments, installments, cardId, invoiceMonth, ...rest } = t;
 
     return {
       ...rest,
-
-      // colunas corretas do Supabase
       card_id: cardId || null,
       invoice_month: invoiceMonth || null,
-
       installment_current: installments?.current || null,
       installment_total: installments?.total || null,
       installment_group_id: installments?.groupId || null,
-
-      paid_amount: paidAmount || 0,
-
+      paid_amount: t.paidAmount || 0,
       user_id: FIXED_USER_ID,
       created_at: t.created_at || new Date().toISOString(),
     };
@@ -197,10 +200,7 @@ export async function savePayments(payments: any[]) {
 }
 
 export async function deletePayment(id: string) {
-  const { error } = await supabase
-    .from("payments")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("payments").delete().eq("id", id);
 
   if (error) console.error("Erro ao deletar pagamento:", error);
 }
