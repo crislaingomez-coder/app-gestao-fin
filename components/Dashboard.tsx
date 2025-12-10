@@ -20,290 +20,380 @@ type ViewMode = 'monthly' | 'general';
 const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMonth, onMonthChange, isPrivacyMode }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('monthly');
   
+  // Navigation helpers for month
   const handlePrevMonth = () => {
     const [year, month] = selectedMonth.split('-').map(Number);
-    const date = new Date(year, month - 2, 1);
+    const date = new Date(year, month - 1 - 1, 1);
     const newMonth = String(date.getMonth() + 1).padStart(2, '0');
     onMonthChange(`${date.getFullYear()}-${newMonth}`);
   };
 
   const handleNextMonth = () => {
     const [year, month] = selectedMonth.split('-').map(Number);
-    const date = new Date(year, month, 1);
+    const date = new Date(year, month - 1 + 1, 1);
     const newMonth = String(date.getMonth() + 1).padStart(2, '0');
     onMonthChange(`${date.getFullYear()}-${newMonth}`);
   };
 
+  // --- GENERAL VIEW CALCULATIONS ---
   const generalData = useMemo(() => {
     let totalDebt = 0;
     let totalPending = 0;
     let totalPaid = 0;
 
-    const categoryMap = new Map<string, number>();
-    const cardMap = new Map<string, number>();
+    const categoryDataMap = new Map<string, number>();
+    const cardDataMap = new Map<string, number>();
 
     transactions.forEach(t => {
-      const amount = t.amount;
-      const paid = t.payments ? t.payments.reduce((s, p) => s + p.amount, 0) : (t.paidAmount || 0);
-      
-      totalDebt += amount;
-      totalPaid += paid;
+        const amount = t.amount;
+        const actualPaid = t.payments 
+            ? t.payments.reduce((sum, p) => sum + p.amount, 0) 
+            : (t.paidAmount || 0);
+        
+        totalDebt += amount;
+        totalPaid += actualPaid;
 
-      const remaining = Math.max(0, amount - paid);
-      if (t.status !== TransactionStatus.PAID) totalPending += remaining;
+        const remaining = Math.max(0, amount - actualPaid);
+        if (t.status !== TransactionStatus.PAID) {
+            totalPending += remaining;
+        }
 
-      categoryMap.set(t.category, (categoryMap.get(t.category) || 0) + amount);
+        categoryDataMap.set(t.category, (categoryDataMap.get(t.category) || 0) + amount);
 
-      if (t.cardId) {
-        const name = cards.find(c => c.id === t.cardId)?.name || 'Desconhecido';
-        cardMap.set(name, (cardMap.get(name) || 0) + amount);
-      }
+        if (t.cardId) {
+            const cardName = cards.find(c => c.id === t.cardId)?.name || 'Desconhecido';
+            cardDataMap.set(cardName, (cardDataMap.get(cardName) || 0) + amount);
+        }
     });
 
-    const categoryData = Array.from(categoryMap.entries())
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+    const categoryData = Array.from(categoryDataMap.entries())
+        .map(([name, value]) => ({ name, value }))
+        .sort((a,b) => b.value - a.value);
 
-    const cardData = Array.from(cardMap.entries())
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+    const cardData = Array.from(cardDataMap.entries())
+        .map(([name, value]) => ({ name, value }))
+        .sort((a,b) => b.value - a.value);
 
+    // General Projection (Next 12 Months)
     const projectionData = [];
     const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-based
 
     for (let i = 0; i < 12; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const target = `${y}-${m}`;
-      const label = `${MONTH_NAMES[d.getMonth()].slice(0, 3)}/${String(y).slice(2)}`;
+        const d = new Date(currentYear, currentMonth + i, 1);
+        const yStr = d.getFullYear();
+        const mStr = String(d.getMonth() + 1).padStart(2, '0');
+        const targetMonthStr = `${yStr}-${mStr}`;
+        const monthNameShort = MONTH_NAMES[d.getMonth()].substring(0,3);
 
-      const total = transactions
-        .filter(t =>
-          t.type === TransactionType.CREDIT_CARD
-            ? t.invoiceMonth === target
-            : t.date.startsWith(target)
-        )
-        .reduce((s, t) => s + t.amount, 0);
+        const totalScheduled = transactions
+            .filter(t => {
+                let matchesMonth = false;
+                if (t.type === TransactionType.CREDIT_CARD) {
+                    matchesMonth = t.invoiceMonth === targetMonthStr;
+                } else {
+                    matchesMonth = t.date.startsWith(targetMonthStr);
+                }
+                return matchesMonth;
+            })
+            .reduce((sum, t) => {
+                 return sum + t.amount;
+            }, 0);
 
-      projectionData.push({ name: label, value: total, fullDate: target });
+        projectionData.push({
+            name: `${monthNameShort}/${String(yStr).slice(2)}`,
+            value: totalScheduled,
+            fullDate: targetMonthStr
+        });
     }
 
     return { totalDebt, totalPending, totalPaid, categoryData, cardData, projectionData };
   }, [transactions, cards]);
 
+
+  // --- MONTHLY VIEW CALCULATIONS ---
   const monthlyData = useMemo(() => {
-    const monthTx = transactions.filter(t =>
-      t.type === TransactionType.CREDIT_CARD
-        ? t.invoiceMonth === selectedMonth
-        : t.date.startsWith(selectedMonth)
-    );
+    // Filter transactions relevant to this view (Invoice month for cards, Date for fixed)
+    const monthTransactions = transactions.filter(t => {
+      if (t.type === TransactionType.CREDIT_CARD) {
+        return t.invoiceMonth === selectedMonth;
+      } else {
+        return t.date.startsWith(selectedMonth);
+      }
+    });
 
     let totalDebt = 0;
     let totalPending = 0;
     let totalPaid = 0;
 
-    monthTx.forEach(t => {
+    monthTransactions.forEach(t => {
       const amount = t.amount;
-      const paid = t.payments ? t.payments.reduce((s, p) => s + p.amount, 0) : (t.paidAmount || 0);
+      const actualPaid = t.payments 
+            ? t.payments.reduce((sum, p) => sum + p.amount, 0) 
+            : (t.paidAmount || 0);
 
       totalDebt += amount;
-      totalPaid += paid;
-
-      const remaining = Math.max(0, amount - paid);
-      if (t.status !== TransactionStatus.PAID) totalPending += remaining;
-    });
-
-    const categoryMap = new Map<string, number>();
-    monthTx.forEach(t => {
-      categoryMap.set(t.category, (categoryMap.get(t.category) || 0) + t.amount);
-    });
-
-    const categoryData = Array.from(categoryMap.entries()).map(([name, value]) => ({
-      name: name.length > 8 ? name.slice(0, 8) + "..." : name,
-      fullName: name,
-      value
-    }));
-
-    const cardMap = new Map<string, number>();
-    monthTx.forEach(t => {
-      if (t.cardId) {
-        const name = cards.find(c => c.id === t.cardId)?.name || "Desconhecido";
-        cardMap.set(name, (cardMap.get(name) || 0) + t.amount);
+      
+      totalPaid += actualPaid;
+      
+      const remaining = Math.max(0, amount - actualPaid);
+      if (t.status !== TransactionStatus.PAID) {
+         totalPending += remaining;
       }
     });
 
-    const cardData = Array.from(cardMap.entries()).map(([name, value]) => ({ name, value }));
+    const categoryDataMap = new Map<string, number>();
+    monthTransactions.forEach(t => {
+        categoryDataMap.set(t.category, (categoryDataMap.get(t.category) || 0) + t.amount);
+    });
+    
+    const categoryData = Array.from(categoryDataMap.entries()).map(([name, value]) => ({
+      name: name.length > 8 ? name.substring(0,8) + '...' : name,
+      fullName: name,
+      value
+    })).sort((a,b) => b.value - a.value);
 
+    const cardDataMap = new Map<string, number>();
+    monthTransactions.forEach(t => {
+        if (t.cardId) {
+            const cardName = cards.find(c => c.id === t.cardId)?.name || 'Desconhecido';
+            const val = t.amount; 
+            cardDataMap.set(cardName, (cardDataMap.get(cardName) || 0) + val);
+        }
+    });
+    const cardData = Array.from(cardDataMap.entries()).map(([name, value]) => ({
+        name, value
+    })).sort((a,b) => b.value - a.value);
+
+    // Projection Logic (Next 6 months relative to selected month)
     const projectionData = [];
-    const [y0, m0] = selectedMonth.split("-").map(Number);
-
+    const [startYear, startMonth] = selectedMonth.split('-').map(Number);
+    
     for (let i = 0; i < 6; i++) {
-      const d = new Date(y0, m0 - 1 + i, 1);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const target = `${y}-${m}`;
-      const label = `${MONTH_NAMES[d.getMonth()].slice(0, 3)}/${String(y).slice(2)}`;
+        const d = new Date(startYear, startMonth - 1 + i, 1);
+        const yStr = d.getFullYear();
+        const mStr = String(d.getMonth() + 1).padStart(2, '0');
+        const targetMonthStr = `${yStr}-${mStr}`;
+        const monthNameShort = MONTH_NAMES[d.getMonth()].substring(0,3);
 
-      const total = transactions
-        .filter(t => {
-          const match =
-            t.type === TransactionType.CREDIT_CARD
-              ? t.invoiceMonth === target
-              : t.date.startsWith(target);
-          if (!match) return false;
+        const totalScheduled = transactions
+            .filter(t => {
+                let matchesMonth = false;
+                if (t.type === TransactionType.CREDIT_CARD) {
+                    matchesMonth = t.invoiceMonth === targetMonthStr;
+                } else {
+                    matchesMonth = t.date.startsWith(targetMonthStr);
+                }
+                
+                if (!matchesMonth) return false;
 
-          if (t.type === TransactionType.CREDIT_CARD) return true;
-          if (t.type === TransactionType.FIXED && t.installments) return true;
+                if (t.type === TransactionType.CREDIT_CARD) return true;
+                if (t.type === TransactionType.FIXED && t.installments) return true;
+                
+                return false; 
+            })
+            .reduce((sum, t) => sum + t.amount, 0);
 
-          return false;
-        })
-        .reduce((s, t) => s + t.amount, 0);
-
-      projectionData.push({ name: label, value: total, fullDate: target });
+        projectionData.push({
+            name: `${monthNameShort}/${String(yStr).slice(2)}`,
+            value: totalScheduled,
+            fullDate: targetMonthStr
+        });
     }
 
     return { totalDebt, totalPending, totalPaid, categoryData, cardData, projectionData };
   }, [transactions, selectedMonth, cards]);
 
-  const activeData = viewMode === "general" ? generalData : monthlyData;
+
+  const activeData = viewMode === 'general' ? generalData : monthlyData;
 
   return (
     <div className="space-y-6 pb-6">
       
-      {/* MODE TOGGLE */}
+      {/* VIEW TOGGLE */}
       <div className="flex justify-center mb-1">
-        <div className="bg-gray-100 p-1 rounded-2xl flex text-xs font-bold shadow-inner">
-          <button
-            onClick={() => setViewMode("monthly")}
-            className={`px-6 py-2.5 rounded-xl transition-all duration-200 ${
-              viewMode === "monthly" ? "bg-white text-blue-600 shadow-sm" : "text-gray-400"
-            }`}
-          >
-            Mensal
-          </button>
-
-          <button
-            onClick={() => setViewMode("general")}
-            className={`px-6 py-2.5 rounded-xl transition-all duration-200 ${
-              viewMode === "general" ? "bg-white text-blue-600 shadow-sm" : "text-gray-400"
-            }`}
-          >
-            Geral
-          </button>
-        </div>
+         <div className="bg-gray-100 p-1 rounded-2xl flex text-xs font-bold shadow-inner">
+            <button
+                onClick={() => setViewMode('monthly')}
+                className={`px-6 py-2.5 rounded-xl transition-all duration-200 ${viewMode === 'monthly' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+                Mensal
+            </button>
+            <button
+                onClick={() => setViewMode('general')}
+                className={`px-6 py-2.5 rounded-xl transition-all duration-200 ${viewMode === 'general' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+                Geral
+            </button>
+         </div>
       </div>
 
-      {/* MONTH PICKER */}
-      {viewMode === "monthly" && (
+      {/* --- TOP BAR: MONTH SELECTOR WITH ARROWS (Only in Monthly Mode) --- */}
+      {viewMode === 'monthly' && (
         <div className="flex flex-col items-center gap-4 animate-scale-in">
-          <div className="flex items-center justify-between w-full max-w-xs bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
-            <button onClick={handlePrevMonth} className="p-2 text-gray-400 hover:text-blue-600">
-              <ChevronLeft size={24} />
-            </button>
+             <div className="flex items-center justify-between w-full max-w-xs bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
+                <button 
+                    onClick={handlePrevMonth}
+                    className="p-2 hover:bg-gray-50 text-gray-400 hover:text-blue-600 rounded-xl transition-colors active:scale-95"
+                >
+                    <ChevronLeft size={24} />
+                </button>
+                
+                <MonthPicker 
+                    value={selectedMonth} 
+                    onChange={onMonthChange} 
+                    variant="header"
+                />
 
-            <MonthPicker value={selectedMonth} onChange={onMonthChange} variant="header" />
-
-            <button onClick={handleNextMonth} className="p-2 text-gray-400 hover:text-blue-600">
-              <ChevronRight size={24} />
-            </button>
-          </div>
+                <button 
+                    onClick={handleNextMonth}
+                    className="p-2 hover:bg-gray-50 text-gray-400 hover:text-blue-600 rounded-xl transition-colors active:scale-95"
+                >
+                    <ChevronRight size={24} />
+                </button>
+            </div>
         </div>
       )}
 
-      {/* GENERAL VIEW HEADER */}
-      {viewMode === "general" && (
-        <div className="flex flex-col items-center gap-4 animate-scale-in">
-          <div className="flex items-center gap-2 bg-blue-50 px-6 py-3 rounded-2xl border border-blue-100 text-blue-700 shadow-sm">
-            <Globe className="w-5 h-5" />
-            <span className="font-bold text-lg">Visão Global de Tudo</span>
-          </div>
-        </div>
+      {viewMode === 'general' && (
+         <div className="flex flex-col items-center gap-4 animate-scale-in">
+            <div className="flex items-center gap-2 bg-blue-50 px-6 py-3 rounded-2xl border border-blue-100 text-blue-700 shadow-sm">
+               <Globe className="w-5 h-5" />
+               <span className="font-bold text-lg">Visão Global de Tudo</span>
+           </div>
+         </div>
       )}
 
-      {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <SummaryCard
-          title={viewMode === "general" ? "Total Acumulado" : "Total (Mês)"}
-          amount={activeData.totalDebt}
-          bg="bg-red-600"
+      {/* --- SUMMARY CARDS --- */}
+      <div className="grid grid-cols-3 gap-2">
+        <SummaryCard 
+          title={viewMode === 'general' ? "Total" : "Total Mês"}
+          amount={activeData.totalDebt} 
+          bg="bg-red-600" 
           textColor="text-white"
-          subtitle={viewMode === "general" ? "Histórico + Futuro" : "Dívida total do mês"}
+          subtitle={viewMode === 'general' ? "Geral" : "Dívida"}
           isPrivacyMode={isPrivacyMode}
         />
-
-        <SummaryCard
-          title="Pendente"
-          amount={activeData.totalPending}
-          bg="bg-orange-500"
-          textColor="text-white"
-          subtitle={viewMode === "general" ? "Total a pagar futuro" : "Restante do mês"}
+        <SummaryCard 
+          title="Pendente" 
+          amount={activeData.totalPending} 
+          bg="bg-orange-500" 
+          textColor="text-white" 
+          subtitle="Restante"
           isPrivacyMode={isPrivacyMode}
         />
-
-        <SummaryCard
-          title="Pago"
-          amount={activeData.totalPaid}
-          bg="bg-green-600"
-          textColor="text-white"
-          subtitle={viewMode === "general" ? "Total já pago" : "Pago neste mês"}
+        <SummaryCard 
+          title="Pago" 
+          amount={activeData.totalPaid} 
+          bg="bg-green-600" 
+          textColor="text-white" 
+          subtitle="Realizado"
           isPrivacyMode={isPrivacyMode}
         />
       </div>
 
       {/* --- PROJECTION CHART --- */}
-      {/* ✔ Linha corrigida aqui */}
-      <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
-
+       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
         <h3 className="text-gray-800 font-bold mb-1 flex items-center gap-2">
-          <BarChart3 size={20} className="text-blue-600" />
-          {viewMode === "general"
-            ? "Projeção de Dívida (12 Meses)"
-            : "Projeção (Dívida Cartão + Fixas Parc.)"}
+            <BarChart3 size={20} className="text-blue-600"/>
+            {viewMode === 'general' ? 'Projeção (12 Meses)' : 'Projeção (6 Meses)'}
         </h3>
-
         <p className="text-xs text-gray-400 mb-4 ml-7">
-          {viewMode === "general"
-            ? "Estimativa de gastos para o próximo ano."
-            : "Soma das parcelas futuras agendadas."}
+            {viewMode === 'general' ? 'Estimativa futura.' : 'Parcelas futuras.'}
         </p>
-
-        <div style={{ width: "100%", height: "300px" }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart layout="vertical" data={activeData.projectionData} margin={{ top: 0, right: 40 }}>
-              <XAxis type="number" hide />
-              <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={50} />
-              <Tooltip formatter={(v) => [isPrivacyMode ? "****" : formatCurrency(v), "Valor Previsto"]} />
-
-              <Bar dataKey="value" barSize={16} radius={[0, 4, 4, 0]}>
-                {activeData.projectionData.map((_, i) => (
-                  <Cell key={i} fill={i === 0 ? COLORS.blue : "#93C5FD"} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+        
+        {/* FIX: Width(-1) Error -> Explicit relative position and dimensions */}
+        <div style={{ width: '100%', height: 300, position: 'relative', minWidth: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart layout="vertical" data={activeData.projectionData} margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
+                <XAxis type="number" hide />
+                <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={50} tick={{fill: '#6b7280', fontWeight: 600}} />
+                <Tooltip 
+                    cursor={{fill: '#f3f4f6'}}
+                    formatter={(value: number) => [isPrivacyMode ? '****' : formatCurrency(value), 'Valor Previsto']}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="value" barSize={16} radius={[0, 4, 4, 0]}>
+                    {activeData.projectionData.map((entry, index) => (
+                         <Cell key={`cell-${index}`} fill={index === 0 ? COLORS.blue : '#93C5FD'} className={isPrivacyMode ? 'privacy-hidden' : ''} />
+                    ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
         </div>
       </div>
+
+      {/* --- CHARTS ROW --- */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0">
+          {/* Category Chart */}
+          <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
+            <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Categoria</h3>
+            <div style={{ width: '100%', height: 300, position: 'relative', minWidth: 0 }}>
+              {activeData.categoryData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={activeData.categoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} />
+                    <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => isPrivacyMode ? '****' : `R$${val}`} tick={{fill: '#9ca3af'}} />
+                    <Tooltip 
+                        cursor={{fill: 'transparent'}}
+                        formatter={(value: number) => [isPrivacyMode ? '****' : formatCurrency(value), 'Valor']}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {activeData.categoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS.blue} className={isPrivacyMode ? 'privacy-hidden' : ''} />
+                        ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400 text-sm">Sem dados</div>
+              )}
+            </div>
+          </div>
+
+          {/* Card Chart */}
+          <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
+            <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Cartão / Conta</h3>
+            <div style={{ width: '100%', height: 300, position: 'relative', minWidth: 0 }}>
+               {activeData.cardData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={activeData.cardData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} />
+                    <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => isPrivacyMode ? '****' : `R$${val}`} tick={{fill: '#9ca3af'}} />
+                    <Tooltip 
+                        cursor={{fill: 'transparent'}}
+                        formatter={(value: number) => [isPrivacyMode ? '****' : formatCurrency(value), 'Valor']}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {activeData.cardData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS.red} className={isPrivacyMode ? 'privacy-hidden' : ''} />
+                        ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+               ) : (
+                 <div className="flex items-center justify-center h-full text-gray-400 text-sm">Sem gastos por cartão</div>
+               )}
+            </div>
+          </div>
+      </div>
+
     </div>
   );
 };
 
 const SummaryCard = ({ title, amount, bg, textColor, subtitle, isPrivacyMode }: any) => (
-  <div className={`${bg} rounded-3xl p-5 shadow-lg shadow-gray-200/50 flex flex-col`}>
-    <span className={`${textColor} text-opacity-80 text-[10px] font-bold uppercase`}>{title}</span>
-
-    <div className="w-full relative">
-      {/* ✔ ÚNICA ALTERAÇÃO DE FONTE PERMITIDA */}
-      <span
-        className={`${textColor} text-[16px] sm:text-2xl font-black tracking-tight whitespace-nowrap block truncate ${
-          isPrivacyMode ? "privacy-hidden" : ""
-        }`}
-      >
-        {isPrivacyMode ? "****" : formatCurrency(amount)}
-      </span>
+  <div className={`${bg} rounded-3xl p-3 shadow-lg shadow-gray-200/50 flex flex-col justify-center items-start min-h-[90px] w-full overflow-hidden relative`}>
+    <span className={`${textColor} text-opacity-90 text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate w-full`}>{title}</span>
+    <div className="w-full relative z-10">
+         <span className={`${textColor} text-lg sm:text-2xl font-bold tracking-tighter leading-tight break-words whitespace-normal ${isPrivacyMode ? 'privacy-hidden' : ''}`}>
+            {isPrivacyMode ? '****' : formatCurrency(amount)}
+        </span>
     </div>
-
-    {subtitle && <span className={`${textColor} text-opacity-75 text-[10px] truncate`}>{subtitle}</span>}
+    {subtitle && <span className={`${textColor} text-opacity-80 text-[9px] font-medium leading-tight mt-0.5 truncate w-full`}>{subtitle}</span>}
   </div>
 );
 
