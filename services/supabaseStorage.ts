@@ -35,18 +35,22 @@ export async function saveCards(cards: CardInfo[]) {
     created_at: c.created_at || new Date().toISOString(),
   }));
 
-  const { error } = await supabase.from("cards").upsert(rows, {
-    onConflict: "id",
-  });
+  const { error } = await supabase
+    .from("cards")
+    .upsert(rows, { onConflict: "id" });
 
   if (error) console.error("Erro ao salvar cards:", error);
 }
 
 export async function deleteCard(id: string) {
-  const { error } = await supabase.from("cards").delete().eq("id", id);
+  const { error } = await supabase
+    .from("cards")
+    .delete()
+    .eq("id", id);
 
   if (error) console.error("Erro ao deletar cartão:", error);
 }
+
 
 // ==========================================================
 // CATEGORIES
@@ -91,11 +95,10 @@ export async function deleteCategory(name: string) {
   if (error) console.error("Erro ao deletar categoria:", error);
 }
 
+
 // ==========================================================
 // TRANSACTIONS
 // ==========================================================
-
-// 🔥🔥🔥 AQUI ESTÁ A CORREÇÃO QUE FAZ AS TRANSAÇÕES APARECEREM NO APP 🔥🔥🔥
 export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
     .from("transactions")
@@ -107,45 +110,34 @@ export async function getTransactions(): Promise<Transaction[]> {
     return [];
   }
 
-  // CONVERTE snake_case → camelCase (ESSA PARTE É O QUE RESOLVE)
-  const converted = (data || []).map((t: any) => ({
-    ...t,
-    cardId: t.card_id,
-    invoiceMonth: t.invoice_month,
-    installments: t.installment_total
-      ? {
-          current: t.installment_current,
-          total: t.installment_total,
-          groupId: t.installment_group_id,
-        }
-      : undefined,
-    paidAmount: t.paid_amount,
-  }));
-
-  return converted;
+  return data || [];
 }
 
-// SALVAR (sem alterar tua lógica)
 export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
 
-  const rows = transactions.map((t) => {
-    const { payments, installments, cardId, invoiceMonth, ...rest } = t;
+  const rows = transactions.map((t) => ({
+    id: t.id,
+    description: t.description,
+    amount: t.amount,
+    date: t.date,
+    type: t.type,
+    category: t.category,
+    status: t.status,
 
-    return {
-      ...rest,
-      card_id: cardId || null,
-      invoice_month: invoiceMonth || null,
-      installment_current: installments?.current || null,
-      installment_total: installments?.total || null,
-      installment_group_id: installments?.groupId || null,
-      paid_amount: t.paidAmount || 0,
-      user_id: FIXED_USER_ID,
-      created_at: t.created_at || new Date().toISOString(),
-    };
-  });
+    // nomes corretos no banco
+    card_id: t.cardId || null,
+    invoice_month: t.invoiceMonth || null,
 
-  console.log("ROWS ENVIADOS PARA O SUPABASE:", JSON.stringify(rows, null, 2));
+    installment_current: t.installments?.current || null,
+    installment_total: t.installments?.total || null,
+    installment_group_id: t.installments?.groupId || null,
+
+    paid_amount: t.paidAmount || 0,
+
+    user_id: FIXED_USER_ID,
+    created_at: t.created_at || new Date().toISOString(),
+  }));
 
   const { error } = await supabase
     .from("transactions")
@@ -162,6 +154,7 @@ export async function deleteTransaction(id: string) {
 
   if (error) console.error("Erro ao deletar transação:", error);
 }
+
 
 // ==========================================================
 // PAYMENTS
@@ -200,7 +193,10 @@ export async function savePayments(payments: any[]) {
 }
 
 export async function deletePayment(id: string) {
-  const { error } = await supabase.from("payments").delete().eq("id", id);
+  const { error } = await supabase
+    .from("payments")
+    .delete()
+    .eq("id", id);
 
   if (error) console.error("Erro ao deletar pagamento:", error);
 }
