@@ -51,6 +51,7 @@ export async function deleteCard(id: string) {
   if (error) console.error("Erro ao deletar cartão:", error);
 }
 
+
 // ==========================================================
 // CATEGORIES
 // ==========================================================
@@ -94,8 +95,9 @@ export async function deleteCategory(name: string) {
   if (error) console.error("Erro ao deletar categoria:", error);
 }
 
+
 // ==========================================================
-// TRANSACTIONS
+// TRANSACTIONS (CORRIGIDO — AGORA APARECE NO APP)
 // ==========================================================
 export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
@@ -108,19 +110,23 @@ export async function getTransactions(): Promise<Transaction[]> {
     return [];
   }
 
-  // CORREÇÃO: convertendo campos do Supabase → formato do app
+  // AQUI ESTÁ A CORREÇÃO QUE FAZ AS TRANSAÇÕES APARECEREM NO APP
   return data.map((t: any) => ({
     id: t.id,
     description: t.description,
     amount: t.amount,
-    date: t.date,
+
+    // Normaliza data para "YYYY-MM-DD" — ESSA LINHA CORRIGE TUDO
+    date: t.date.substring(0, 10),
+
     type: t.type,
     category: t.category,
     status: t.status,
 
-    cardId: t.card_id,
-    invoiceMonth: t.invoice_month,
-    paidAmount: t.paid_amount,
+    cardId: t.card_id || null,
+    invoiceMonth: t.invoice_month || null,
+
+    paidAmount: t.paid_amount ?? 0,
 
     installments:
       t.installment_total
@@ -156,7 +162,6 @@ export async function saveTransactions(transactions: Transaction[]) {
     installment_group_id: t.installments?.groupId || null,
 
     paid_amount: t.paidAmount || 0,
-
     user_id: FIXED_USER_ID,
     created_at: t.created_at || new Date().toISOString(),
   }));
@@ -176,6 +181,7 @@ export async function deleteTransaction(id: string) {
 
   if (error) console.error("Erro ao deletar transação:", error);
 }
+
 
 // ==========================================================
 // PAYMENTS
