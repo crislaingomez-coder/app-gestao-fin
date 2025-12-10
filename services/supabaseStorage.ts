@@ -1,4 +1,3 @@
-// services/supabaseStorage.ts
 import { supabase } from "./supabaseClient";
 import { Transaction, CardInfo } from "../types";
 import { DEFAULT_CARDS, DEFAULT_CATEGORIES } from "../constants";
@@ -115,13 +114,15 @@ export async function saveTransactions(transactions: Transaction[]) {
   if (!transactions || transactions.length === 0) return;
 
   const rows = transactions.map((t) => {
-    const { payments, installments, cardId, ...rest } = t;
+    // REMOVER payments, installments, cardId, invoiceMonth para não quebrar o Supabase
+    const { payments, installments, cardId, invoiceMonth, ...rest } = t;
 
     return {
       ...rest,
 
+      // nomes corretos das colunas
       card_id: cardId || null,
-      invoice_month: t.invoiceMonth || null,
+      invoice_month: invoiceMonth || null,
 
       installment_current: installments?.current || null,
       installment_total: installments?.total || null,
@@ -134,9 +135,7 @@ export async function saveTransactions(transactions: Transaction[]) {
     };
   });
 
-  // 🔥🔥🔥 **ÚNICA MODIFICAÇÃO QUE VOCÊ PRECISA**
   console.log("ROWS ENVIADOS PARA O SUPABASE:", JSON.stringify(rows, null, 2));
-  // 🔥🔥🔥
 
   const { error } = await supabase
     .from("transactions")
