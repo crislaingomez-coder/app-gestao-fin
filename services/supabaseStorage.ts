@@ -1,8 +1,9 @@
 import { supabase } from "./supabaseClient";
-import { Transaction, CardInfo, PaymentRecord } from "../types";
+import { Transaction, CardInfo, PaymentRecord, OpenDebt } from "../types";
 import { DEFAULT_CARDS, DEFAULT_CATEGORIES } from "../constants";
 
 const FIXED_USER_ID = "00000000-0000-0000-0000-000000000000";
+
 
 // ==========================================================
 // CARDS
@@ -57,6 +58,7 @@ export async function deleteCard(id: string) {
   if (error) console.error("Erro ao deletar cartão:", error);
 }
 
+
 // ==========================================================
 // CATEGORIES
 // ==========================================================
@@ -99,6 +101,7 @@ export async function deleteCategory(name: string) {
 
   if (error) console.error("Erro ao deletar categoria:", error);
 }
+
 
 // ==========================================================
 // TRANSACTIONS + PAYMENTS JOIN
@@ -193,6 +196,7 @@ export async function deleteTransaction(id: string) {
   if (error) console.error("Erro ao deletar transação:", error);
 }
 
+
 // ==========================================================
 // PAYMENTS — CORRETO E PRONTO PARA FUNCIONAR
 // ==========================================================
@@ -201,7 +205,7 @@ export async function savePayments(payments: PaymentRecord[]) {
 
   const rows = payments.map((p) => ({
     id: p.id,
-    transaction_id: (p as any).transactionId, // <<< GARANTIDO
+    transaction_id: (p as any).transactionId,
     amount: p.amount,
     date: p.date,
     user_id: FIXED_USER_ID,
@@ -222,4 +226,57 @@ export async function deletePayment(id: string) {
     .eq("id", id);
 
   if (error) console.error("Erro ao deletar pagamento:", error);
+}
+
+
+
+// ==========================================================
+// OPEN DEBTS — NOVA FUNCIONALIDADE (APENAS ACRESCENTADO)
+// ==========================================================
+export async function getOpenDebts(): Promise<OpenDebt[]> {
+  const { data, error } = await supabase
+    .from("open_debts")
+    .select("*")
+    .eq("user_id", FIXED_USER_ID)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Erro ao carregar open_debts:", error);
+    return [];
+  }
+
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    personName: r.person_name,
+    amount: Number(r.amount),
+    description: r.description ?? undefined,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function saveOpenDebt(debt: OpenDebt) {
+  const row = {
+    id: debt.id,
+    person_name: debt.personName,
+    amount: debt.amount,
+    description: debt.description ?? null,
+    created_at: debt.createdAt ?? new Date().toISOString(),
+    user_id: FIXED_USER_ID,
+  };
+
+  const { error } = await supabase
+    .from("open_debts")
+    .upsert(row, { onConflict: "id" });
+
+  if (error) console.error("Erro ao salvar open_debt:", error);
+}
+
+export async function deleteOpenDebt(id: string) {
+  const { error } = await supabase
+    .from("open_debts")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", FIXED_USER_ID);
+
+  if (error) console.error("Erro ao deletar open_debt:", error);
 }
