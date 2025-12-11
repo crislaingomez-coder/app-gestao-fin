@@ -59,6 +59,7 @@ export async function deleteCard(id: string) {
 }
 
 
+
 // ==========================================================
 // CATEGORIES
 // ==========================================================
@@ -103,16 +104,14 @@ export async function deleteCategory(name: string) {
 }
 
 
+
 // ==========================================================
 // TRANSACTIONS + PAYMENTS JOIN
 // ==========================================================
 export async function getTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
     .from("transactions")
-    .select(`
-      *,
-      payments:payments(*)
-    `)
+    .select(`*, payments:payments(*)`)
     .order("created_at");
 
   if (error || !data) {
@@ -197,8 +196,9 @@ export async function deleteTransaction(id: string) {
 }
 
 
+
 // ==========================================================
-// PAYMENTS — CORRETO E PRONTO PARA FUNCIONAR
+// PAYMENTS
 // ==========================================================
 export async function savePayments(payments: PaymentRecord[]) {
   if (!payments || payments.length === 0) return;
@@ -231,7 +231,7 @@ export async function deletePayment(id: string) {
 
 
 // ==========================================================
-// OPEN DEBTS — NOVA FUNCIONALIDADE (APENAS ACRESCENTADO)
+// OPEN DEBTS (CORRIGIDO)
 // ==========================================================
 export async function getOpenDebts(): Promise<OpenDebt[]> {
   const { data, error } = await supabase
@@ -254,21 +254,23 @@ export async function getOpenDebts(): Promise<OpenDebt[]> {
   }));
 }
 
-export async function saveOpenDebt(debt: OpenDebt) {
-  const row = {
-    id: debt.id,
-    person_name: debt.personName,
-    amount: debt.amount,
-    description: debt.description ?? null,
-    created_at: debt.createdAt ?? new Date().toISOString(),
+export async function saveOpenDebts(debts: OpenDebt[]) {
+  if (!debts || debts.length === 0) return;
+
+  const rows = debts.map((d) => ({
+    id: d.id,
+    person_name: d.personName,
+    amount: d.amount,
+    description: d.description ?? null,
+    created_at: d.createdAt ?? new Date().toISOString(),
     user_id: FIXED_USER_ID,
-  };
+  }));
 
   const { error } = await supabase
     .from("open_debts")
-    .upsert(row, { onConflict: "id" });
+    .upsert(rows, { onConflict: "id" });
 
-  if (error) console.error("Erro ao salvar open_debt:", error);
+  if (error) console.error("Erro ao salvar open_debts:", error);
 }
 
 export async function deleteOpenDebt(id: string) {
