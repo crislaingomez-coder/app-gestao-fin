@@ -138,7 +138,7 @@ const App: React.FC = () => {
             Entrar
           </button>
 
-          <p className="mt-8 text-xs text-gray-400 font-medium">Versão 1.0.0 (PWA)</p>
+          <p className="mt-8 text-xs text-gray-400 font-medium">Versão 1.0.0 (PWA) - Desenvolvido por Crislaine Gomes</p>
         </div>
       </div>
     );
