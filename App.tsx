@@ -4,7 +4,7 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
 import Settings from './components/Settings';
-import OpenDebts from './components/OpenDebts';   // ← ADICIONADO
+import OpenDebts from './components/OpenDebts';   // ADICIONADO
 
 import {
   Transaction,
@@ -17,7 +17,7 @@ import {
   getTransactions, saveTransactions,
   getCards, saveCards,
   getCategories, saveCategories,
-  getOpenDebts, saveOpenDebt,    // ← CORRIGIDO
+  getOpenDebts, saveOpenDebt,      // CORRETO
   deleteTransaction, deleteCard, deleteCategory,
   savePayments
 } from "./services/supabaseStorage";
@@ -25,7 +25,7 @@ import {
 import { getCurrentMonthStr } from './constants';
 
 
-// LOGO — igual ao seu original
+// LOGO — igual ao original
 const Logo = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={className}>
     <rect width="512" height="512" rx="128" fill="#2563eb" />
@@ -47,8 +47,8 @@ const App: React.FC = () => {
   const [cards, setCards] = useState<CardInfo[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [openDebts, setOpenDebts] = useState<OpenDebt[]>([]); // ADICIONADO
 
-  const [openDebts, setOpenDebts] = useState<OpenDebt[]>([]);  // ← ADICIONADO
 
   const onRequestConfirm = (msg: string, onConfirm: () => void) => {
     if (window.confirm(msg)) onConfirm();
@@ -61,12 +61,12 @@ const App: React.FC = () => {
         const tx = await getTransactions();
         const cs = await getCards();
         const cats = await getCategories();
-        const debts = await getOpenDebts();  // ← ADICIONADO
+        const debts = await getOpenDebts();  // ADICIONADO
 
         setTransactions(tx ?? []);
         setCards(cs ?? []);
         setCategories(cats ?? []);
-        setOpenDebts(debts ?? []);          // ← ADICIONADO
+        setOpenDebts(debts ?? []);           // ADICIONADO
 
       } catch (err) {
         console.error("Erro ao inicializar dados:", err);
@@ -74,15 +74,20 @@ const App: React.FC = () => {
     })();
   }, []);
 
+
   // SAVE
   useEffect(() => { saveTransactions(transactions); }, [transactions]);
   useEffect(() => { saveCards(cards); }, [cards]);
   useEffect(() => { saveCategories(categories); }, [categories]);
   useEffect(() => { savePayments(payments); }, [payments]);
-  useEffect(() => { saveOpenDebt(openDebts); }, [openDebts]);   // ← CORRIGIDO
+
+  // SALVAR OPEN DEBTS CORRETAMENTE (um por vez)
+  useEffect(() => {
+    openDebts.forEach(d => saveOpenDebt(d));
+  }, [openDebts]);
 
 
-  // HANDLERS — tudo igual ao seu código original
+  // HANDLERS ORIGINAIS
   const handleAddTransaction = (t: Transaction | Transaction[]) =>
     setTransactions(prev => [...prev, ...(Array.isArray(t) ? t : [t])]);
 
@@ -123,7 +128,7 @@ const App: React.FC = () => {
   };
 
 
-  // OPEN DEBTS — NOVA FUNCIONALIDADE (apenas adicionada)
+  // OPEN DEBTS — ADICIONADO
   const handleAddOpenDebt = (d: OpenDebt) =>
     setOpenDebts(prev => [d, ...prev]);
 
@@ -141,14 +146,38 @@ const App: React.FC = () => {
   const togglePrivacyMode = () => setIsPrivacyMode(p => !p);
 
 
-  // LOGIN SCREEN (igual ao original)
+
+  // LOGIN SCREEN — SEU ORIGINAL VOLTOU
   if (screen === 'login') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 relative overflow-hidden">
-        {/* seu código original */}
+
+        <div className="absolute top-[-10%] right-[-10%] w-[50vh] h-[50vh] bg-blue-200/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40vh] h-[40vh] bg-orange-200/20 rounded-full blur-3xl animate-pulse"></div>
+
+        <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
+          <div className="mb-8 p-6 bg-white rounded-[2.5rem] shadow-xl shadow-blue-500/10">
+            <Logo className="w-24 h-24" />
+          </div>
+
+          <h1 className="text-3xl font-extrabold text-gray-800 mb-2">Minha Gestão</h1>
+          <p className="text-gray-400 mb-10 text-center text-sm font-medium">Controle financeiro pessoal inteligente</p>
+
+          <button
+            onClick={() => setScreen('dashboard')}
+            className="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 active:scale-[0.98]"
+          >
+            Entrar
+          </button>
+
+          <p className="mt-8 text-xs text-gray-400 font-medium">
+            Versão 1.0.0 (PWA) - Desenvolvido por Crislaine Gomes
+          </p>
+        </div>
       </div>
     );
   }
+
 
 
   // MAIN NAVIGATION
