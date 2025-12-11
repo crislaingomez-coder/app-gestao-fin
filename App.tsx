@@ -1,22 +1,29 @@
 import React, { useState, useEffect } from 'react';
+
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
 import Settings from './components/Settings';
 import OpenDebts from './components/OpenDebts';   // ← ADICIONADO
 
-import { Transaction, CardInfo, OpenDebt, PaymentRecord } from './types';
+import {
+  Transaction,
+  CardInfo,
+  OpenDebt,
+  PaymentRecord
+} from './types';
 
-import { 
-    getTransactions, saveTransactions, 
-    getCards, saveCards,
-    getCategories, saveCategories,
-    getOpenDebts, saveOpenDebts,   // ← ADICIONADO
-    deleteTransaction, deleteCard, deleteCategory,
-    savePayments                    // ← EXISTENTE NO SEU CÓDIGO
+import {
+  getTransactions, saveTransactions,
+  getCards, saveCards,
+  getCategories, saveCategories,
+  getOpenDebts, saveOpenDebt,    // ← CORRIGIDO
+  deleteTransaction, deleteCard, deleteCategory,
+  savePayments
 } from "./services/supabaseStorage";
 
 import { getCurrentMonthStr } from './constants';
+
 
 // LOGO — igual ao seu original
 const Logo = ({ className }: { className?: string }) => (
@@ -39,9 +46,9 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [cards, setCards] = useState<CardInfo[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [payments, setPayments] = useState<PaymentRecord[]>([]); 
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
 
-  const [openDebts, setOpenDebts] = useState<OpenDebt[]>([]);   // ← ADICIONADO
+  const [openDebts, setOpenDebts] = useState<OpenDebt[]>([]);  // ← ADICIONADO
 
   const onRequestConfirm = (msg: string, onConfirm: () => void) => {
     if (window.confirm(msg)) onConfirm();
@@ -54,12 +61,12 @@ const App: React.FC = () => {
         const tx = await getTransactions();
         const cs = await getCards();
         const cats = await getCategories();
-        const debts = await getOpenDebts();   // ← ADICIONADO
+        const debts = await getOpenDebts();  // ← ADICIONADO
 
         setTransactions(tx ?? []);
         setCards(cs ?? []);
         setCategories(cats ?? []);
-        setOpenDebts(debts ?? []);           // ← ADICIONADO
+        setOpenDebts(debts ?? []);          // ← ADICIONADO
 
       } catch (err) {
         console.error("Erro ao inicializar dados:", err);
@@ -72,9 +79,10 @@ const App: React.FC = () => {
   useEffect(() => { saveCards(cards); }, [cards]);
   useEffect(() => { saveCategories(categories); }, [categories]);
   useEffect(() => { savePayments(payments); }, [payments]);
-  useEffect(() => { saveOpenDebts(openDebts); }, [openDebts]);   // ← ADICIONADO
+  useEffect(() => { saveOpenDebt(openDebts); }, [openDebts]);   // ← CORRIGIDO
 
-  // HANDLERS
+
+  // HANDLERS — tudo igual ao seu código original
   const handleAddTransaction = (t: Transaction | Transaction[]) =>
     setTransactions(prev => [...prev, ...(Array.isArray(t) ? t : [t])]);
 
@@ -91,6 +99,7 @@ const App: React.FC = () => {
   const handleAddPayment = (p: PaymentRecord) =>
     setPayments(prev => [...prev, p]);
 
+
   // CARDS
   const handleAddCard = (c: CardInfo) => setCards(prev => [...prev, c]);
 
@@ -102,6 +111,7 @@ const App: React.FC = () => {
     setCards(prev => prev.filter(c => c.id !== id));
   };
 
+
   // CATEGORIES
   const handleAddCategory = (c: string) => {
     if (!categories.includes(c)) setCategories(prev => [...prev, c]);
@@ -112,12 +122,14 @@ const App: React.FC = () => {
     setCategories(prev => prev.filter(x => x !== c));
   };
 
-  // OPEN DEBTS HANDLERS  ← ADICIONADO
+
+  // OPEN DEBTS — NOVA FUNCIONALIDADE (apenas adicionada)
   const handleAddOpenDebt = (d: OpenDebt) =>
     setOpenDebts(prev => [d, ...prev]);
 
   const handleDeleteOpenDebt = (id: string) =>
     setOpenDebts(prev => prev.filter(d => d.id !== id));
+
 
   // RESTORE
   const handleRestoreData = (t: Transaction[], c: CardInfo[], g: string[]) => {
@@ -128,7 +140,8 @@ const App: React.FC = () => {
 
   const togglePrivacyMode = () => setIsPrivacyMode(p => !p);
 
-  // LOGIN SCREEN — idêntico ao original
+
+  // LOGIN SCREEN (igual ao original)
   if (screen === 'login') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 relative overflow-hidden">
@@ -137,9 +150,10 @@ const App: React.FC = () => {
     );
   }
 
+
   // MAIN NAVIGATION
   return (
-    <Layout 
+    <Layout
       activeScreen={screen}
       onNavigate={setScreen}
       isPrivacyMode={isPrivacyMode}
@@ -170,8 +184,8 @@ const App: React.FC = () => {
         />
       )}
 
-      {screen === 'opendebts' && (                         // ← ADICIONADO
-        <OpenDebts 
+      {screen === 'opendebts' && (
+        <OpenDebts
           debts={openDebts}
           onAddDebt={handleAddOpenDebt}
           onDeleteDebt={handleDeleteOpenDebt}
