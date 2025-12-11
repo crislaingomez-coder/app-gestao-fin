@@ -155,7 +155,7 @@ const App: React.FC = () => {
 
   const handleAddOpenDebt = async (d: OpenDebt) => {
     setOpenDebts(prev => [d, ...prev]);
-    await saveOpenDebts(d);      // SALVA UM POR VEZ → CORRETO
+    await saveOpenDebts([d]);      // SALVA UM POR VEZ → CORRETO
   };
 
   const handleDeleteOpenDebt = async (id: string) => {
