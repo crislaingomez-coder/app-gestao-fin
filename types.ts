@@ -9,6 +9,9 @@ export enum TransactionStatus {
   PAID = 'PAID'
 }
 
+
+
+
 export interface CardInfo {
   id: string;
   name: string;
