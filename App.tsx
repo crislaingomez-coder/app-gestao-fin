@@ -17,7 +17,7 @@ import {
   getTransactions, saveTransactions,
   getCards, saveCards,
   getCategories, saveCategories,
-  getOpenDebts, saveOpenDebt,
+  getOpenDebts, saveOpenDebts,
   deleteTransaction, deleteCard, deleteCategory,
   savePayments, deleteOpenDebt
 } from "./services/supabaseStorage";
@@ -155,7 +155,7 @@ const App: React.FC = () => {
 
   const handleAddOpenDebt = async (d: OpenDebt) => {
     setOpenDebts(prev => [d, ...prev]);
-    await saveOpenDebt(d);      // SALVA UM POR VEZ → CORRETO
+    await saveOpenDebts(d);      // SALVA UM POR VEZ → CORRETO
   };
 
   const handleDeleteOpenDebt = async (id: string) => {
