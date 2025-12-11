@@ -27,7 +27,7 @@ const OpenDebts: React.FC<OpenDebtsProps> = ({ debts, onAddDebt, onDeleteDebt, i
     if (!personName || !amount) return;
 
     const newDebt: OpenDebt = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID(),
       personName: personName.toUpperCase(),
       amount: parseFloat(amount.replace(',', '.')),
       description: description,
