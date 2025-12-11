@@ -9,6 +9,8 @@ interface LayoutProps {
   togglePrivacyMode: () => void;
 }
 
+
+
 const Layout: React.FC<LayoutProps> = ({ children, activeScreen, onNavigate, isPrivacyMode, togglePrivacyMode }) => {
   
   return (
