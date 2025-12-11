@@ -1,3 +1,4 @@
+
 export enum TransactionType {
   CREDIT_CARD = 'CREDIT_CARD',
   FIXED = 'FIXED'
@@ -41,6 +42,14 @@ export interface Transaction {
   cardId?: string; // If CREDIT_CARD
   invoiceMonth?: string; // YYYY-MM format. Calculated for cards.
   installments?: InstallmentInfo;
+}
+
+export interface OpenDebt {
+  id: string;
+  personName: string; // Vô, Irmã, Amigo...
+  amount: number;
+  description?: string; // "Pagar quando arrumar emprego"
+  createdAt: string;
 }
 
 export interface DashboardSummary {
