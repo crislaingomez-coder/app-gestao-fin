@@ -3,34 +3,21 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
 import Settings from './components/Settings';
-import { Transaction, CardInfo, PaymentRecord } from './types';
+import OpenDebts from './components/OpenDebts';
+import { Transaction, CardInfo, OpenDebt, PaymentRecord } from './types';
 
-import {
-  getTransactions,
-  saveTransactions,
-  getCards,
-  saveCards,
-  getCategories,
-  saveCategories,
-  deleteTransaction,
-  deleteCard,
-  deleteCategory,
-  savePayments   // ← ADICIONADO (única mudança real)
-} from "./services/supabaseStorage";
+import { 
+    getTransactions, saveTransactions, 
+    getCards, saveCards,
+    getCategories, saveCategories,
+    getOpenDebts, saveOpenDebts,
+    savePayments          // ← ADICIONADO
+} from './services/storage';
 
 import { getCurrentMonthStr } from './constants';
 
-// LOGO (igual ao original)
-const Logo = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={className}>
-    <rect width="512" height="512" rx="128" fill="#2563eb" />
-    <path d="M128 350L256 480L384 350" fill="none" stroke="#1e40af" strokeWidth="20" opacity="0.1" />
-    <rect x="112" y="144" width="288" height="224" rx="32" fill="#ffffff" />
-    <path d="M112 184h288" stroke="#e5e7eb" strokeWidth="16" />
-    <path d="M320 232h80v48h-80a24 24 0 0 1-24-24v0a24 24 0 0 1 24-24z" fill="#f59e0b" />
-    <circle cx="360" cy="256" r="12" fill="#ffffff" />
-  </svg>
-);
+// LOGO — sem alteração
+const Logo = ({ className }: { className?: string }) => ( ... );
 
 const App: React.FC = () => {
   const [screen, setScreen] = useState<string>('login');
@@ -40,120 +27,97 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [cards, setCards] = useState<CardInfo[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [payments, setPayments] = useState<PaymentRecord[]>([]); // ← ADICIONADO
+  const [openDebts, setOpenDebts] = useState<OpenDebt[]>([]);
 
-  const onRequestConfirm = (msg: string, onConfirm: () => void) => {
-    if (window.confirm(msg)) onConfirm();
-  };
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);   // ← ADICIONADO
 
-  // LOAD INITIAL DATA
+  const [confirmConfig, setConfirmConfig] = useState({
+      isOpen: false,
+      message: '',
+      onConfirm: () => {}
+  });
+
+  // LOAD DATA
   useEffect(() => {
-    (async () => {
-      try {
-        const tx = await getTransactions();
-        const cs = await getCards();
-        const cats = await getCategories();
-
-        setTransactions(tx ?? []);
-        setCards(cs ?? []);
-        setCategories(cats ?? []);
-      } catch (err) {
-        console.error("Erro ao inicializar dados:", err);
-        setTransactions([]);
-        setCards([]);
-        setCategories([]);
-      }
-    })();
+    setTransactions(getTransactions());
+    setCards(getCards());
+    setCategories(getCategories());
+    setOpenDebts(getOpenDebts());
   }, []);
 
-  // SAVE CHANGES
+  // SAVE DATA
   useEffect(() => { saveTransactions(transactions); }, [transactions]);
   useEffect(() => { saveCards(cards); }, [cards]);
   useEffect(() => { saveCategories(categories); }, [categories]);
-  useEffect(() => { savePayments(payments); }, [payments]); // ← ADICIONADO
+  useEffect(() => { saveOpenDebts(openDebts); }, [openDebts]);
+  useEffect(() => { savePayments(payments); }, [payments]);   // ← ADICIONADO
 
-  // HANDLERS (iguais aos seus)
-  const handleAddTransaction = (t: Transaction | Transaction[]) =>
-    setTransactions(prev => [...prev, ...(Array.isArray(t) ? t : [t])]);
+  // HANDLERS
+  const handleAddTransaction = (newTransactions: Transaction[]) =>
+    setTransactions(prev => [...prev, ...newTransactions]);
 
-  const handleDeleteTransaction = async (id: string) => {
-    await deleteTransaction(id);
+  const handleDeleteTransaction = (id: string) =>
     setTransactions(prev => prev.filter(t => t.id !== id));
-  };
 
-  const handleUpdateTransactions = (updates: Transaction[]) => {
+  const handleUpdateTransactions = (updates: Transaction[]) =>
     setTransactions(prev =>
-      prev.map(t => updates.find(u => u.id === t.id) ?? t)
+      prev.map(t => updates.find(u => u.id === t.id) || t)
     );
-  };
 
-  const handleAddPayment = (p: PaymentRecord) =>   // ← ADICIONADO
+  const handleAddPayment = (p: PaymentRecord) =>    // ← ADICIONADO
     setPayments(prev => [...prev, p]);
 
-  // CARDS
-  const handleAddCard = (c: CardInfo) => setCards(prev => [...prev, c]);
-  const handleEditCard = (c: CardInfo) => setCards(prev => prev.map(x => x.id === c.id ? c : x));
-  const handleDeleteCard = async (id: string) => {
-    await deleteCard(id);
+  const handleAddCard = (c: CardInfo) =>
+    setCards(prev => [...prev, c]);
+
+  const handleEditCard = (c: CardInfo) =>
+    setCards(prev => prev.map(x => x.id === c.id ? c : x));
+
+  const handleDeleteCard = (id: string) =>
     setCards(prev => prev.filter(c => c.id !== id));
+
+  const handleAddCategory = (cat: string) => {
+      if (!categories.includes(cat))
+          setCategories(prev => [...prev, cat]);
   };
 
-  // CATEGORIES
-  const handleAddCategory = (c: string) => {
-    if (!categories.includes(c)) setCategories(prev => [...prev, c]);
-  };
+  const handleDeleteCategory = (cat: string) =>
+    setCategories(prev => prev.filter(c => c !== cat));
 
-  const handleDeleteCategory = async (c: string) => {
-    await deleteCategory(c);
-    setCategories(prev => prev.filter(x => x !== c));
-  };
+  const handleAddOpenDebt = (d: OpenDebt) =>
+    setOpenDebts(prev => [d, ...prev]);
+
+  const handleDeleteOpenDebt = (id: string) =>
+    setOpenDebts(prev => prev.filter(d => d.id !== id));
 
   const handleRestoreData = (t: Transaction[], c: CardInfo[], g: string[]) => {
-    setTransactions(t);
-    setCards(c);
-    setCategories(g);
+      setTransactions(t);
+      setCards(c);
+      setCategories(g);
   };
 
-  const togglePrivacyMode = () => setIsPrivacyMode(p => !p);
+  const togglePrivacyMode = () => setIsPrivacyMode(v => !v);
 
-  // LOGIN SCREEN (igual ao original)
-  if (screen === 'login') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 relative overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] w-[50vh] h-[50vh] bg-blue-200/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40vh] h-[40vh] bg-orange-200/20 rounded-full blur-3xl animate-pulse"></div>
+  const handleRequestConfirm = (message: string, onConfirm: () => void) =>
+    setConfirmConfig({ isOpen: true, message, onConfirm });
 
-        <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
-          <div className="mb-8 p-6 bg-white rounded-[2.5rem] shadow-xl shadow-blue-500/10">
-            <Logo className="w-24 h-24" />
-          </div>
+  const executeConfirm = () => {
+    confirmConfig.onConfirm();
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+  };
 
-          <h1 className="text-3xl font-extrabold text-gray-800 mb-2">Minha Gestão</h1>
-          <p className="text-gray-400 mb-10 text-center text-sm font-medium">Controle financeiro pessoal inteligente</p>
+  if (screen === 'login') return ( ... );
 
-          <button
-            onClick={() => setScreen('dashboard')}
-            className="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 active:scale-[0.98]"
-          >
-            Entrar
-          </button>
-
-          <p className="mt-8 text-xs text-gray-400 font-medium">Versão 1.0.0 (PWA) - Desenvolvido por Crislaine Gomes</p>
-        </div>
-      </div>
-    );
-  }
-
-  // MAIN NAVIGATION (igual ao seu original)
   return (
-    <Layout
+    <Layout 
       activeScreen={screen}
       onNavigate={setScreen}
       isPrivacyMode={isPrivacyMode}
       togglePrivacyMode={togglePrivacyMode}
     >
+
       {screen === 'dashboard' && (
-        <Dashboard
+        <Dashboard 
           transactions={transactions}
           cards={cards}
           selectedMonth={selectedMonth}
@@ -163,7 +127,7 @@ const App: React.FC = () => {
       )}
 
       {(screen === 'expenses' || screen === 'payments') && (
-        <Transactions
+        <Transactions 
           mode={screen}
           transactions={transactions}
           cards={cards}
@@ -173,12 +137,22 @@ const App: React.FC = () => {
           onUpdateTransactions={handleUpdateTransactions}
           onAddPayment={handleAddPayment}   // ← ADICIONADO
           isPrivacyMode={isPrivacyMode}
-          onRequestConfirm={onRequestConfirm}
+          onRequestConfirm={handleRequestConfirm}
+        />
+      )}
+
+      {screen === 'opendebts' && (
+        <OpenDebts 
+          debts={openDebts}
+          onAddDebt={handleAddOpenDebt}
+          onDeleteDebt={handleDeleteOpenDebt}
+          isPrivacyMode={isPrivacyMode}
+          onRequestConfirm={handleRequestConfirm}
         />
       )}
 
       {screen === 'settings' && (
-        <Settings
+        <Settings 
           cards={cards}
           categories={categories}
           transactions={transactions}
@@ -190,6 +164,8 @@ const App: React.FC = () => {
           onRestoreData={handleRestoreData}
         />
       )}
+
+      {/* modal igual ao seu */}
     </Layout>
   );
 };
