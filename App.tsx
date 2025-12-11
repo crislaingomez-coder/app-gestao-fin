@@ -4,28 +4,30 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
 import Settings from './components/Settings';
-import OpenDebts from './components/OpenDebts';   // ADICIONADO
+import OpenDebts from './components/OpenDebts';
 
 import {
   Transaction,
   CardInfo,
-  OpenDebt,
-  PaymentRecord
+  PaymentRecord,
+  OpenDebt
 } from './types';
 
 import {
   getTransactions, saveTransactions,
   getCards, saveCards,
   getCategories, saveCategories,
-  getOpenDebts, saveOpenDebt,      // CORRETO
+  getOpenDebts, saveOpenDebt,
   deleteTransaction, deleteCard, deleteCategory,
-  savePayments
+  savePayments, deleteOpenDebt
 } from "./services/supabaseStorage";
 
 import { getCurrentMonthStr } from './constants';
 
 
-// LOGO — igual ao original
+// =====================================================================
+// LOGO (igual ao seu original)
+// =====================================================================
 const Logo = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={className}>
     <rect width="512" height="512" rx="128" fill="#2563eb" />
@@ -37,8 +39,13 @@ const Logo = ({ className }: { className?: string }) => (
   </svg>
 );
 
+
+
 const App: React.FC = () => {
 
+  // =====================================================================
+  // STATES
+  // =====================================================================
   const [screen, setScreen] = useState<string>('login');
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonthStr());
   const [isPrivacyMode, setIsPrivacyMode] = useState(false);
@@ -47,26 +54,35 @@ const App: React.FC = () => {
   const [cards, setCards] = useState<CardInfo[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
-  const [openDebts, setOpenDebts] = useState<OpenDebt[]>([]); // ADICIONADO
+
+  const [openDebts, setOpenDebts] = useState<OpenDebt[]>([]);
 
 
+
+  // =====================================================================
+  // CONFIRMAÇÃO (igual ao seu: window.confirm)
+  // =====================================================================
   const onRequestConfirm = (msg: string, onConfirm: () => void) => {
     if (window.confirm(msg)) onConfirm();
   };
 
-  // LOAD DATA
+
+
+  // =====================================================================
+  // LOAD INITIAL DATA
+  // =====================================================================
   useEffect(() => {
     (async () => {
       try {
         const tx = await getTransactions();
         const cs = await getCards();
         const cats = await getCategories();
-        const debts = await getOpenDebts();  // ADICIONADO
+        const debts = await getOpenDebts();
 
         setTransactions(tx ?? []);
         setCards(cs ?? []);
         setCategories(cats ?? []);
-        setOpenDebts(debts ?? []);           // ADICIONADO
+        setOpenDebts(debts ?? []);
 
       } catch (err) {
         console.error("Erro ao inicializar dados:", err);
@@ -75,19 +91,21 @@ const App: React.FC = () => {
   }, []);
 
 
-  // SAVE
+
+  // =====================================================================
+  // SAVERS (SEM LOOP INFINITO)
+  // =====================================================================
   useEffect(() => { saveTransactions(transactions); }, [transactions]);
   useEffect(() => { saveCards(cards); }, [cards]);
   useEffect(() => { saveCategories(categories); }, [categories]);
   useEffect(() => { savePayments(payments); }, [payments]);
 
-  // SALVAR OPEN DEBTS CORRETAMENTE (um por vez)
-  useEffect(() => {
-    openDebts.forEach(d => saveOpenDebt(d));
-  }, [openDebts]);
 
 
-  // HANDLERS ORIGINAIS
+  // =====================================================================
+  // HANDLERS — MESMO CÓDIGO DO SEU APP ORIGINAL
+  // =====================================================================
+
   const handleAddTransaction = (t: Transaction | Transaction[]) =>
     setTransactions(prev => [...prev, ...(Array.isArray(t) ? t : [t])]);
 
@@ -105,6 +123,7 @@ const App: React.FC = () => {
     setPayments(prev => [...prev, p]);
 
 
+
   // CARDS
   const handleAddCard = (c: CardInfo) => setCards(prev => [...prev, c]);
 
@@ -115,6 +134,7 @@ const App: React.FC = () => {
     await deleteCard(id);
     setCards(prev => prev.filter(c => c.id !== id));
   };
+
 
 
   // CATEGORIES
@@ -128,12 +148,21 @@ const App: React.FC = () => {
   };
 
 
-  // OPEN DEBTS — ADICIONADO
-  const handleAddOpenDebt = (d: OpenDebt) =>
-    setOpenDebts(prev => [d, ...prev]);
 
-  const handleDeleteOpenDebt = (id: string) =>
+  // =====================================================================
+  // OPEN DEBTS — NOVA FUNCIONALIDADE CORRETA
+  // =====================================================================
+
+  const handleAddOpenDebt = async (d: OpenDebt) => {
+    setOpenDebts(prev => [d, ...prev]);
+    await saveOpenDebt(d);      // SALVA UM POR VEZ → CORRETO
+  };
+
+  const handleDeleteOpenDebt = async (id: string) => {
+    await deleteOpenDebt(id);   // REMOVE DO BANCO
     setOpenDebts(prev => prev.filter(d => d.id !== id));
+  };
+
 
 
   // RESTORE
@@ -147,7 +176,9 @@ const App: React.FC = () => {
 
 
 
-  // LOGIN SCREEN — SEU ORIGINAL VOLTOU
+  // =====================================================================
+  // LOGIN SCREEN — SEU LAYOUT ORIGINAL MANTIDO
+  // =====================================================================
   if (screen === 'login') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 relative overflow-hidden">
@@ -180,7 +211,9 @@ const App: React.FC = () => {
 
 
 
-  // MAIN NAVIGATION
+  // =====================================================================
+  // MAIN NAVIGATION — AGORA INCLUI A TELA NOVA
+  // =====================================================================
   return (
     <Layout
       activeScreen={screen}
