@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, TrendingDown, History, Settings, LogOut, Wallet, Eye, EyeOff } from 'lucide-react';
+import { LayoutDashboard, TrendingDown, History, Settings, LogOut, Wallet, Eye, EyeOff, Users } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -49,27 +49,33 @@ const Layout: React.FC<LayoutProps> = ({ children, activeScreen, onNavigate, isP
       </main>
       
       {/* --- BOTTOM NAVIGATION BAR (Mobile Style) --- */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe pt-2 px-6 h-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-30 flex justify-between items-start">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe pt-2 px-2 h-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-30 flex justify-around items-start">
           <NavItem 
-            icon={<LayoutDashboard size={24} />} 
+            icon={<LayoutDashboard size={22} />} 
             label="Painel" 
             isActive={activeScreen === 'dashboard'} 
             onClick={() => onNavigate('dashboard')} 
           />
           <NavItem 
-            icon={<TrendingDown size={24} />} 
+            icon={<TrendingDown size={22} />} 
             label="Gastos" 
             isActive={activeScreen === 'expenses'} 
             onClick={() => onNavigate('expenses')} 
           />
           <NavItem 
-            icon={<History size={24} />} 
+            icon={<History size={22} />} 
             label="Pagos" 
             isActive={activeScreen === 'payments'} 
             onClick={() => onNavigate('payments')} 
           />
           <NavItem 
-            icon={<Settings size={24} />} 
+            icon={<Users size={22} />} 
+            label="Dívidas" 
+            isActive={activeScreen === 'opendebts'} 
+            onClick={() => onNavigate('opendebts')} 
+          />
+          <NavItem 
+            icon={<Settings size={22} />} 
             label="Config" 
             isActive={activeScreen === 'settings'} 
             onClick={() => onNavigate('settings')} 
@@ -95,17 +101,17 @@ const NavItem = ({ icon, label, isActive, onClick }: any) => (
   <button
     onClick={onClick}
     className={`
-      flex flex-col items-center justify-center gap-1 w-16 transition-all duration-200 group
-      ${isActive ? 'text-blue-600 -translate-y-2' : 'text-gray-400 hover:text-gray-600'}
+      flex flex-col items-center justify-center gap-1 w-14 transition-all duration-200 group
+      ${isActive ? 'text-blue-600 -translate-y-1' : 'text-gray-400 hover:text-gray-600'}
     `}
   >
     <div className={`
-        p-2 rounded-2xl transition-all duration-200
+        p-1.5 rounded-xl transition-all duration-200
         ${isActive ? 'bg-blue-50 shadow-sm ring-1 ring-blue-100' : 'bg-transparent'}
     `}>
         {icon}
     </div>
-    <span className={`text-[10px] font-bold tracking-wide ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+    <span className={`text-[9px] font-bold tracking-wide ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         {label}
     </span>
   </button>
