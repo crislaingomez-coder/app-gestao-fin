@@ -301,7 +301,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
         />
       </div>
 
-      {/* --- PROJECTION CHART --- */}
+      {/* --- PROJECTION CHART (HORIZONTAL) --- */}
        <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
         <h3 className="text-gray-800 font-bold mb-1 flex items-center gap-2">
             <BarChart3 size={20} className="text-blue-600"/>
@@ -340,12 +340,12 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
         </div>
       </div>
 
-      {/* --- CHARTS ROW --- */}
+      {/* --- CHARTS ROW (VERTICAL) --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0">
           {/* Category Chart */}
           <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
             <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Categoria</h3>
-            <div className="w-full h-[320px] relative">
+            <div className="w-full h-[340px] relative">
               {activeData.categoryData.length > 0 ? (
                 <ResponsiveContainer width="99%" height="100%">
                   <BarChart data={activeData.categoryData} margin={{ top: 20, right: 0, left: -25, bottom: 0 }}>
@@ -359,12 +359,12 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
                     <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
                         <LabelList 
                             dataKey="value" 
-                            position="insideTop" 
+                            position="inside" 
+                            angle={-90}
                             formatter={renderCustomLabel}
                             fill="#fff" 
-                            fontSize={9} 
-                            fontWeight="bold" 
-                            offset={5}
+                            fontSize={10} 
+                            fontWeight="bold"
                         />
                         {activeData.categoryData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS.blue} className={isPrivacyMode ? 'privacy-hidden' : ''} />
@@ -381,7 +381,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
           {/* Card Chart */}
           <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
             <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Cartão / Conta</h3>
-            <div className="w-full h-[320px] relative">
+            <div className="w-full h-[340px] relative">
                {activeData.cardData.length > 0 ? (
                 <ResponsiveContainer width="99%" height="100%">
                   <BarChart data={activeData.cardData} margin={{ top: 20, right: 0, left: -25, bottom: 0 }}>
@@ -395,12 +395,12 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
                     <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
                         <LabelList 
                             dataKey="value" 
-                            position="insideTop" 
+                            position="inside" 
+                            angle={-90}
                             formatter={renderCustomLabel}
                             fill="#fff" 
-                            fontSize={9} 
-                            fontWeight="bold" 
-                            offset={5}
+                            fontSize={10} 
+                            fontWeight="bold"
                         />
                         {activeData.cardData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS.red} className={isPrivacyMode ? 'privacy-hidden' : ''} />
