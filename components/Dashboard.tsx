@@ -359,8 +359,9 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
                     <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
                         <LabelList 
                             dataKey="value" 
-                            position="inside" 
+                            position="insideTop" 
                             angle={-90}
+                            offset={25}
                             formatter={renderCustomLabel}
                             fill="#fff" 
                             fontSize={10} 
@@ -395,8 +396,9 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
                     <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
                         <LabelList 
                             dataKey="value" 
-                            position="inside" 
+                            position="insideTop" 
                             angle={-90}
+                            offset={25}
                             formatter={renderCustomLabel}
                             fill="#fff" 
                             fontSize={10} 
