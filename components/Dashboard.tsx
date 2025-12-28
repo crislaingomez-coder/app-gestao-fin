@@ -311,8 +311,8 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
             {viewMode === 'general' ? 'Estimativa futura.' : 'Parcelas futuras.'}
         </p>
         
-        <div className="w-full h-[320px] relative">
-            <ResponsiveContainer width="99%" height="100%">
+        <div className="w-full h-[320px] relative overflow-hidden">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} debounce={50}>
               <BarChart layout="vertical" data={activeData.projectionData} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} width={50} tick={{fill: '#6b7280', fontWeight: 600}} />
@@ -345,9 +345,9 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
           {/* Category Chart */}
           <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
             <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Categoria</h3>
-            <div className="w-full h-[340px] relative">
+            <div className="w-full h-[340px] relative overflow-hidden">
               {activeData.categoryData.length > 0 ? (
-                <ResponsiveContainer width="99%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} debounce={50}>
                   <BarChart data={activeData.categoryData} margin={{ top: 20, right: 0, left: -25, bottom: 25 }}>
                     <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} />
                     <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => isPrivacyMode ? '****' : `R$${val}`} tick={{fill: '#9ca3af'}} />
@@ -383,9 +383,9 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
           {/* Card Chart */}
           <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
             <h3 className="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Por Cartão / Conta</h3>
-            <div className="w-full h-[340px] relative">
+            <div className="w-full h-[340px] relative overflow-hidden">
                {activeData.cardData.length > 0 ? (
-                <ResponsiveContainer width="99%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} debounce={50}>
                   <BarChart data={activeData.cardData} margin={{ top: 20, right: 0, left: -25, bottom: 25 }}>
                     <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} />
                     <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => isPrivacyMode ? '****' : `R$${val}`} tick={{fill: '#9ca3af'}} />
