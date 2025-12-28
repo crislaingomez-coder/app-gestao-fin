@@ -10,7 +10,7 @@ import MonthPicker from './MonthPicker';
 interface DashboardProps {
   transactions: Transaction[];
   cards: CardInfo[];
-  selectedMonth: string; // YYYY-MM
+  selectedMonth: string;
   onMonthChange: (month: string) => void;
   isPrivacyMode: boolean;
 }
@@ -22,18 +22,19 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
 
   const handlePrevMonth = () => {
     const [year, month] = selectedMonth.split('-').map(Number);
-    const date = new Date(year, month - 1 - 1, 1);
+    const date = new Date(year, month - 2, 1);
     const newMonth = String(date.getMonth() + 1).padStart(2, '0');
     onMonthChange(`${date.getFullYear()}-${newMonth}`);
   };
 
   const handleNextMonth = () => {
     const [year, month] = selectedMonth.split('-').map(Number);
-    const date = new Date(year, month - 1 + 1, 1);
+    const date = new Date(year, month, 1);
     const newMonth = String(date.getMonth() + 1).padStart(2, '0');
     onMonthChange(`${date.getFullYear()}-${newMonth}`);
   };
 
+  // --- GENERAL VIEW CALCULATIONS ---
   const generalData = useMemo(() => {
     let totalDebt = 0;
     let totalPending = 0;
@@ -44,17 +45,15 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
 
     transactions.forEach(t => {
       const amount = t.amount;
-      const actualPaid = t.payments 
-        ? t.payments.reduce((sum, p) => sum + p.amount, 0) 
+      const actualPaid = t.payments
+        ? t.payments.reduce((sum, p) => sum + p.amount, 0)
         : (t.paidAmount || 0);
 
       totalDebt += amount;
       totalPaid += actualPaid;
 
       const remaining = Math.max(0, amount - actualPaid);
-      if (t.status !== TransactionStatus.PAID) {
-        totalPending += remaining;
-      }
+      if (t.status !== TransactionStatus.PAID) totalPending += remaining;
 
       categoryDataMap.set(t.category, (categoryDataMap.get(t.category) || 0) + amount);
 
@@ -66,11 +65,11 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
 
     const categoryData = Array.from(categoryDataMap.entries())
       .map(([name, value]) => ({ name, value }))
-      .sort((a,b) => b.value - a.value);
+      .sort((a, b) => b.value - a.value);
 
     const cardData = Array.from(cardDataMap.entries())
       .map(([name, value]) => ({ name, value }))
-      .sort((a,b) => b.value - a.value);
+      .sort((a, b) => b.value - a.value);
 
     const projectionData = [];
     const now = new Date();
@@ -82,16 +81,14 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
       const yStr = d.getFullYear();
       const mStr = String(d.getMonth() + 1).padStart(2, '0');
       const targetMonthStr = `${yStr}-${mStr}`;
-      const monthNameShort = MONTH_NAMES[d.getMonth()].substring(0,3);
+      const monthNameShort = MONTH_NAMES[d.getMonth()].substring(0, 3);
 
       const totalScheduled = transactions
-        .filter(t => {
-          if (t.type === TransactionType.CREDIT_CARD) {
-            return t.invoiceMonth === targetMonthStr;
-          } else {
-            return t.date.startsWith(targetMonthStr);
-          }
-        })
+        .filter(t =>
+          t.type === TransactionType.CREDIT_CARD
+            ? t.invoiceMonth === targetMonthStr
+            : t.date.startsWith(targetMonthStr)
+        )
         .reduce((sum, t) => sum + t.amount, 0);
 
       projectionData.push({
@@ -104,14 +101,13 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
     return { totalDebt, totalPending, totalPaid, categoryData, cardData, projectionData };
   }, [transactions, cards]);
 
+  // --- MONTHLY VIEW CALCULATIONS ---
   const monthlyData = useMemo(() => {
-    const monthTransactions = transactions.filter(t => {
-      if (t.type === TransactionType.CREDIT_CARD) {
-        return t.invoiceMonth === selectedMonth;
-      } else {
-        return t.date.startsWith(selectedMonth);
-      }
-    });
+    const monthTransactions = transactions.filter(t =>
+      t.type === TransactionType.CREDIT_CARD
+        ? t.invoiceMonth === selectedMonth
+        : t.date.startsWith(selectedMonth)
+    );
 
     let totalDebt = 0;
     let totalPending = 0;
@@ -119,17 +115,15 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
 
     monthTransactions.forEach(t => {
       const amount = t.amount;
-      const actualPaid = t.payments 
-        ? t.payments.reduce((sum, p) => sum + p.amount, 0) 
+      const actualPaid = t.payments
+        ? t.payments.reduce((sum, p) => sum + p.amount, 0)
         : (t.paidAmount || 0);
 
       totalDebt += amount;
       totalPaid += actualPaid;
 
       const remaining = Math.max(0, amount - actualPaid);
-      if (t.status !== TransactionStatus.PAID) {
-        totalPending += remaining;
-      }
+      if (t.status !== TransactionStatus.PAID) totalPending += remaining;
     });
 
     const categoryDataMap = new Map<string, number>();
@@ -138,10 +132,10 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
     });
 
     const categoryData = Array.from(categoryDataMap.entries()).map(([name, value]) => ({
-      name: name.length > 8 ? name.substring(0,8) + '...' : name,
+      name: name.length > 8 ? name.substring(0, 8) + '...' : name,
       fullName: name,
       value
-    })).sort((a,b) => b.value - a.value);
+    })).sort((a, b) => b.value - a.value);
 
     const cardDataMap = new Map<string, number>();
     monthTransactions.forEach(t => {
@@ -153,7 +147,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
 
     const cardData = Array.from(cardDataMap.entries()).map(([name, value]) => ({
       name, value
-    })).sort((a,b) => b.value - a.value);
+    })).sort((a, b) => b.value - a.value);
 
     const projectionData = [];
     const [startYear, startMonth] = selectedMonth.split('-').map(Number);
@@ -163,16 +157,14 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
       const yStr = d.getFullYear();
       const mStr = String(d.getMonth() + 1).padStart(2, '0');
       const targetMonthStr = `${yStr}-${mStr}`;
-      const monthNameShort = MONTH_NAMES[d.getMonth()].substring(0,3);
+      const monthNameShort = MONTH_NAMES[d.getMonth()].substring(0, 3);
 
       const totalScheduled = transactions
         .filter(t => {
-          let matchesMonth = false;
-          if (t.type === TransactionType.CREDIT_CARD) {
-            matchesMonth = t.invoiceMonth === targetMonthStr;
-          } else {
-            matchesMonth = t.date.startsWith(targetMonthStr);
-          }
+          const matchesMonth =
+            t.type === TransactionType.CREDIT_CARD
+              ? t.invoiceMonth === targetMonthStr
+              : t.date.startsWith(targetMonthStr);
 
           if (!matchesMonth) return false;
           if (t.type === TransactionType.CREDIT_CARD) return true;
@@ -196,7 +188,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
   return (
     <div className="space-y-6 pb-6">
 
-      {/* PROJECTION */}
+      {/* PROJECTION CHART (HORIZONTAL) */}
       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 w-full min-w-0">
         <h3 className="text-gray-800 font-bold mb-1 flex items-center gap-2">
           <BarChart3 size={20} className="text-blue-600"/>
@@ -219,7 +211,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
                   fontSize={11}
                 />
                 {activeData.projectionData.map((_, index) => (
-                  <Cell key={index} fill={index === 0 ? COLORS.blue : '#93C5FD'} />
+                  <Cell key={`cell-${index}`} fill={index === 0 ? COLORS.blue : '#93C5FD'} />
                 ))}
               </Bar>
             </BarChart>
@@ -227,7 +219,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
         </div>
       </div>
 
-      {/* CATEGORIA */}
+      {/* CATEGORY (VERTICAL) */}
       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={activeData.categoryData}>
@@ -243,14 +235,14 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
                 fontSize={10}
               />
               {activeData.categoryData.map((_, i) => (
-                <Cell key={i} fill={COLORS.blue} />
+                <Cell key={`cell-${i}`} fill={COLORS.blue} />
               ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      {/* CARTÃO */}
+      {/* CARD (VERTICAL) */}
       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={activeData.cardData}>
@@ -266,7 +258,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
                 fontSize={10}
               />
               {activeData.cardData.map((_, i) => (
-                <Cell key={i} fill={COLORS.red} />
+                <Cell key={`cell-${i}`} fill={COLORS.red} />
               ))}
             </Bar>
           </BarChart>
