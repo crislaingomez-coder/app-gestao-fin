@@ -348,7 +348,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
             <div className="w-full h-[340px] relative">
               {activeData.categoryData.length > 0 ? (
                 <ResponsiveContainer width="99%" height="100%">
-                  <BarChart data={activeData.categoryData} margin={{ top: 20, right: 0, left: -25, bottom: 0 }}>
+                  <BarChart data={activeData.categoryData} margin={{ top: 20, right: 0, left: -25, bottom: 25 }}>
                     <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} />
                     <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => isPrivacyMode ? '****' : `R$${val}`} tick={{fill: '#9ca3af'}} />
                     <Tooltip 
@@ -356,16 +356,17 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
                         formatter={(value: number) => [isPrivacyMode ? '****' : formatCurrency(value), 'Valor']}
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={45}>
                         <LabelList 
                             dataKey="value" 
-                            position="insideTop" 
+                            position="insideBottom" 
                             angle={-90}
-                            offset={25}
+                            offset={35}
                             formatter={renderCustomLabel}
                             fill="#fff" 
                             fontSize={10} 
                             fontWeight="bold"
+                            textAnchor="middle"
                         />
                         {activeData.categoryData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS.blue} className={isPrivacyMode ? 'privacy-hidden' : ''} />
@@ -385,7 +386,7 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
             <div className="w-full h-[340px] relative">
                {activeData.cardData.length > 0 ? (
                 <ResponsiveContainer width="99%" height="100%">
-                  <BarChart data={activeData.cardData} margin={{ top: 20, right: 0, left: -25, bottom: 0 }}>
+                  <BarChart data={activeData.cardData} margin={{ top: 20, right: 0, left: -25, bottom: 25 }}>
                     <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} tick={{fill: '#9ca3af'}} />
                     <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => isPrivacyMode ? '****' : `R$${val}`} tick={{fill: '#9ca3af'}} />
                     <Tooltip 
@@ -393,16 +394,17 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, cards, selectedMont
                         formatter={(value: number) => [isPrivacyMode ? '****' : formatCurrency(value), 'Valor']}
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={45}>
                         <LabelList 
                             dataKey="value" 
-                            position="insideTop" 
+                            position="insideBottom" 
                             angle={-90}
-                            offset={25}
+                            offset={35}
                             formatter={renderCustomLabel}
                             fill="#fff" 
                             fontSize={10} 
                             fontWeight="bold"
+                            textAnchor="middle"
                         />
                         {activeData.cardData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS.red} className={isPrivacyMode ? 'privacy-hidden' : ''} />
