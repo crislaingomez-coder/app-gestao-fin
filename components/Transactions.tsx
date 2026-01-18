@@ -106,7 +106,6 @@ const Transactions: React.FC<TransactionsProps> = ({
 }) => {
 
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthStr());
-  const [filterCard, setFilterCard] = useState('all');
   const [searchText, setSearchText] = useState('');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
