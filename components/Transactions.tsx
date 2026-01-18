@@ -125,27 +125,20 @@ const Transactions: React.FC<TransactionsProps> = ({
 
   // ------- EXPENSES -------
   const filteredExpenses = useMemo(() => {
-    return transactions.filter(t => {
-      let matchesMonth = false;
+  return transactions
+    .filter(t => {
       if (t.type === TransactionType.CREDIT_CARD) {
-        matchesMonth = t.invoiceMonth === filterMonth;
-      } else {
-        matchesMonth = t.date.startsWith(filterMonth);
+        return t.invoiceMonth === filterMonth;
       }
-      
-      let matchesCard = true;
-      if (filterCard !== 'all') {
-         matchesCard = t.cardId === filterCard;
-      }
+      return t.date.startsWith(filterMonth);
+    })
+    .filter(t =>
+      !searchText ||
+      t.description.toUpperCase().includes(searchText.toUpperCase())
+    )
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}, [transactions, filterMonth, searchText]);
 
-      let matchesSearch = true;
-      if (searchText) {
-          matchesSearch = t.description.toUpperCase().includes(searchText.toUpperCase());
-      }
-
-      return matchesMonth && matchesCard && matchesSearch;
-    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [transactions, filterMonth, filterCard, searchText]);
 
   // ------- PAYMENTS -------
   const filteredPayments = useMemo(() => {
