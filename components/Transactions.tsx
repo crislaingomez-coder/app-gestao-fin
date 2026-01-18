@@ -648,21 +648,8 @@ const filteredPayments = useMemo(() => {
       );
     })}
   </div>
-))
+))}
 
-                            }
-                          );
-                        }}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )
         ) : filteredPayments.length === 0 ? (
           <div className="text-center py-10 text-gray-400 text-sm">
             Nenhum pagamento no período.
