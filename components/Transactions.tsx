@@ -512,143 +512,147 @@ const filteredPayments = useMemo(() => {
 
       {/* LISTAGEM */}
       <div className="space-y-3">
-        {mode === 'expenses' ? (
-          groupedExpenses.length === 0 ? (
-            <div className="text-center py-10 text-gray-400 text-sm">
-              Nenhum lançamento encontrado.
-            </div>
-          ) : (
-           groupedExpenses.map(group => (
-  <div key={group.cardId} className="space-y-4">
-
-    {/* CABEÇALHO DO GRUPO */}
-    <div className="flex items-center gap-4 px-2">
-      <div className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs">
-        {group.dueDay}
+       {mode === 'expenses' ? (
+  <>
+    {groupedExpenses.length === 0 ? (
+      <div className="text-center py-10 text-gray-400 text-sm">
+        Nenhum lançamento encontrado.
       </div>
-      <div className="h-px flex-1 bg-gray-200"></div>
-      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-        {group.cardName} • VENCIMENTO
-      </span>
-    </div>
+    ) : (
+      groupedExpenses.map(group => (
+        <div key={group.cardId} className="space-y-4">
 
-    {/* ITENS */}
-    {group.items.map(t => {
-      const card = cards.find(c => c.id === t.cardId);
-      const paid = t.payments
-        ? t.payments.reduce((s, p) => s + p.amount, 0)
-        : t.paidAmount || 0;
-      const remaining = t.amount - paid;
-      const isPartial = paid > 0 && remaining > 0.01;
-
-      return (
-        <div
-          key={t.id}
-          className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div
-              className={`p-2.5 rounded-xl shrink-0 ${
-                t.type === TransactionType.CREDIT_CARD
-                  ? 'bg-orange-50 text-orange-600'
-                  : 'bg-blue-50 text-blue-600'
-              }`}
-            >
-              {t.type === TransactionType.CREDIT_CARD ? (
-                <CreditCard size={20} />
-              ) : (
-                <FileText size={20} />
-              )}
+          {/* CABEÇALHO DO GRUPO */}
+          <div className="flex items-center gap-4 px-2">
+            <div className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs">
+              {group.dueDay}
             </div>
-
-            <div className="min-w-0">
-              <p className="font-bold text-gray-900 truncate">
-                {t.description}
-              </p>
-
-              <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                <span className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">
-                  {t.category}
-                </span>
-
-                <span className="flex items-center gap-1">
-                  {card ? (
-                    <>
-                      <span
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: card.color }}
-                      ></span>
-                      {card.name}
-                    </>
-                  ) : (
-                    'PIX'
-                  )}
-                </span>
-
-                <span>
-                  • {t.date.split('-').reverse().slice(0, 2).join('/')}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-end gap-1">
-            <span
-              className={`font-bold text-lg ${
-                isPrivacyMode ? 'privacy-hidden' : ''
-              } ${
-                t.status === TransactionStatus.PAID
-                  ? 'text-green-600'
-                  : 'text-gray-900'
-              }`}
-            >
-              {isPrivacyMode ? '****' : formatCurrency(t.amount)}
+            <div className="h-px flex-1 bg-gray-200"></div>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              {group.cardName} • VENCIMENTO
             </span>
-
-            {isPartial && (
-              <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold">
-                Rest:{' '}
-                {isPrivacyMode
-                  ? '****'
-                  : formatCurrency(remaining)}
-              </span>
-            )}
-
-            <div className="flex gap-2 mt-1">
-              <button
-                type="button"
-                onClick={() => openEditForm(t)}
-                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"
-              >
-                <Pencil size={18} />
-              </button>
-
-              <button
-                type="button"
-                onClick={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onRequestConfirm(
-                    'Tem certeza que deseja excluir este gasto?',
-                    async () => {
-                      try {
-                        await deleteTransaction(t.id);
-                      } catch {}
-                      onDeleteTransaction(t.id);
-                    }
-                  );
-                }}
-                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
           </div>
+
+          {/* ITENS */}
+          {group.items.map(t => {
+            const card = cards.find(c => c.id === t.cardId);
+            const paid = t.payments
+              ? t.payments.reduce((s, p) => s + p.amount, 0)
+              : t.paidAmount || 0;
+            const remaining = t.amount - paid;
+            const isPartial = paid > 0 && remaining > 0.01;
+
+            return (
+              <div
+                key={t.id}
+                className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div
+                    className={`p-2.5 rounded-xl shrink-0 ${
+                      t.type === TransactionType.CREDIT_CARD
+                        ? 'bg-orange-50 text-orange-600'
+                        : 'bg-blue-50 text-blue-600'
+                    }`}
+                  >
+                    {t.type === TransactionType.CREDIT_CARD ? (
+                      <CreditCard size={20} />
+                    ) : (
+                      <FileText size={20} />
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-900 truncate">
+                      {t.description}
+                    </p>
+
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                      <span className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">
+                        {t.category}
+                      </span>
+
+                      <span className="flex items-center gap-1">
+                        {card ? (
+                          <>
+                            <span
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ backgroundColor: card.color }}
+                            ></span>
+                            {card.name}
+                          </>
+                        ) : (
+                          'PIX'
+                        )}
+                      </span>
+
+                      <span>
+                        • {t.date.split('-').reverse().slice(0, 2).join('/')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-end gap-1">
+                  <span
+                    className={`font-bold text-lg ${
+                      isPrivacyMode ? 'privacy-hidden' : ''
+                    } ${
+                      t.status === TransactionStatus.PAID
+                        ? 'text-green-600'
+                        : 'text-gray-900'
+                    }`}
+                  >
+                    {isPrivacyMode ? '****' : formatCurrency(t.amount)}
+                  </span>
+
+                  {isPartial && (
+                    <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold">
+                      Rest:{' '}
+                      {isPrivacyMode
+                        ? '****'
+                        : formatCurrency(remaining)}
+                    </span>
+                  )}
+
+                  <div className="flex gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => openEditForm(t)}
+                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"
+                    >
+                      <Pencil size={18} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onRequestConfirm(
+                          'Tem certeza que deseja excluir este gasto?',
+                          async () => {
+                            try {
+                              await deleteTransaction(t.id);
+                            } catch {}
+                            onDeleteTransaction(t.id);
+                          }
+                        );
+                      }}
+                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      );
-    })}
-  </div>
-))
+      ))
+    )}
+  </>
+
 
         ) : filteredPayments.length === 0 ? (
           <div className="text-center py-10 text-gray-400 text-sm">
