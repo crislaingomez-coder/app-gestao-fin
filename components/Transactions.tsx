@@ -141,35 +141,49 @@ const Transactions: React.FC<TransactionsProps> = ({
 
 
   // ------- PAYMENTS -------
-  const filteredPayments = useMemo(() => {
-    const allPayments: any[] = [];
-    transactions.forEach(t => {
-        const tCard = t.cardId ? cards.find(c => c.id === t.cardId) : null;
-        if (filterCard !== 'all' && t.cardId !== filterCard) return;
+const filteredPayments = useMemo(() => {
+  const allPayments: any[] = [];
 
-        const common = {
-            transactionId: t.id,
-            description: t.description,
-            category: t.category,
-            cardName: tCard ? tCard.name : 'PIX',
-            cardId: t.cardId,
-            color: tCard?.color || '#ccc'
-        };
+  transactions.forEach(t => {
+    const tCard = t.cardId ? cards.find(c => c.id === t.cardId) : null;
 
-        if (t.payments && t.payments.length > 0) {
-            t.payments.forEach(p => {
-                if (p.date.startsWith(filterMonth)) {
-                    allPayments.push({ ...common, id: p.id, date: p.date, amount: p.amount });
-                }
-            });
-        } else if (t.status === TransactionStatus.PAID && t.paidAmount) {
-             if (t.date.startsWith(filterMonth)) {
-                 allPayments.push({ ...common, id: t.id + '_legacy', date: t.date, amount: t.paidAmount });
-             }
+    const common = {
+      transactionId: t.id,
+      description: t.description,
+      category: t.category,
+      cardName: tCard ? tCard.name : 'PIX',
+      cardId: t.cardId,
+      color: tCard?.color || '#ccc'
+    };
+
+    if (t.payments && t.payments.length > 0) {
+      t.payments.forEach(p => {
+        if (p.date.startsWith(filterMonth)) {
+          allPayments.push({
+            ...common,
+            id: p.id,
+            date: p.date,
+            amount: p.amount
+          });
         }
-    });
-    return allPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [transactions, filterMonth, filterCard, cards]);
+      });
+    } else if (t.status === TransactionStatus.PAID && t.paidAmount) {
+      if (t.date.startsWith(filterMonth)) {
+        allPayments.push({
+          ...common,
+          id: t.id + '_legacy',
+          date: t.date,
+          amount: t.paidAmount
+        });
+      }
+    }
+  });
+
+  return allPayments.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+}, [transactions, filterMonth, cards]);
+
 
   // ------- BULK PAYMENT CALC -------
   const bulkDebts = useMemo(() => {
