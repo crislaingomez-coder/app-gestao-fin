@@ -648,7 +648,7 @@ const filteredPayments = useMemo(() => {
       );
     })}
   </div>
-))}
+))
 
         ) : filteredPayments.length === 0 ? (
           <div className="text-center py-10 text-gray-400 text-sm">
