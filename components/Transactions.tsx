@@ -900,7 +900,7 @@ const filteredPayments = useMemo(() => {
 
       {/* MODAL PAGAMENTO */}
       {isBulkOpen && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center sm:p-4 backdrop-blur-[2px]">
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center sm:p-4 backdrop-blur-[2px]">
           <div className="bg-white w-full max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 shadow-2xl animate-slide-up sm:animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
