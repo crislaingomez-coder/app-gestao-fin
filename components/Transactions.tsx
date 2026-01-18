@@ -513,7 +513,7 @@ const filteredPayments = useMemo(() => {
       {/* LISTAGEM */}
       <div className="space-y-3">
         {mode === 'expenses' ? (
-          filteredExpenses.length === 0 ? (
+          groupedExpenses.length === 0 ? (
             <div className="text-center py-10 text-gray-400 text-sm">
               Nenhum lançamento encontrado.
             </div>
