@@ -453,19 +453,7 @@ const Transactions: React.FC<TransactionsProps> = ({
           <div className="flex-1">
             <MonthPicker value={filterMonth} onChange={setFilterMonth} />
           </div>
-          <div className="flex-1">
-            <CustomSelect
-              value={filterCard}
-              onChange={setFilterCard}
-              options={[
-                { value: 'all', label: 'Todos' },
-                ...cards.map(c => ({ value: c.id, label: c.name, color: c.color }))
-              ]}
-              minimal
-              icon={<CreditCard size={16} />}
-              placeholder="Cartão"
-            />
-          </div>
+      
         </div>
 
         <div className="relative">
