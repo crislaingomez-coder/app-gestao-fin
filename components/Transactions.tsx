@@ -138,6 +138,39 @@ const Transactions: React.FC<TransactionsProps> = ({
     )
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }, [transactions, filterMonth, searchText]);
+    const groupedExpenses = useMemo(() => {
+  const groups: {
+    cardId: string;
+    cardName: string;
+    dueDay: string;
+    items: Transaction[];
+  }[] = [];
+
+  const map = new Map<string, Transaction[]>();
+
+  filteredExpenses.forEach(t => {
+    const key = t.cardId || 'pix';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(t);
+  });
+
+  map.forEach((items, cardId) => {
+    const card = cards.find(c => c.id === cardId);
+
+    const dueDay = card
+      ? String(card.dueDay).padStart(2, '0')
+      : items[0].date.split('-')[2];
+
+    groups.push({
+      cardId,
+      cardName: card ? card.name : 'PIX / FIXO',
+      dueDay,
+      items: items.sort((a, b) => a.date.localeCompare(b.date))
+    });
+  });
+
+  return groups.sort((a, b) => a.dueDay.localeCompare(b.dueDay));
+}, [filteredExpenses, cards]);
 
 
   // ------- PAYMENTS -------
