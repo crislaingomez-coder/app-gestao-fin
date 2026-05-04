@@ -1,70 +1,43 @@
 # 💰 App de Gestão Financeira — PWA
 
-> Aplicativo instalável no celular para controle financeiro pessoal. Controle de gastos, receitas e visualização por dashboard — tudo no seu bolso.
+> Aplicativo instalável no celular para controle financeiro pessoal com foco em cartões de crédito, contas fixas e visualização gráfica detalhada.
 
-[![Deploy](https://img.shields.io/badge/Deploy-Vercel-black?style=for-the-badge&logo=vercel)](https://app-gestao-fin.vercel.app)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
-[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+**🔗 Acesse em produção:** [app-gestao-fin.vercel.app](https://app-gestao-fin.vercel.app)
 
 ---
 
-## 🚀 Acesse o App
+## 📸 Preview
 
-🔗 **[app-gestao-fin.vercel.app](https://app-gestao-fin.vercel.app)**
-
-> No celular, clique em **"Adicionar à tela inicial"** para instalar como app nativo.
-
----
-
-## 📱 Sobre o Projeto
-
-Aplicativo PWA (Progressive Web App) desenvolvido para controle financeiro pessoal. Funciona no navegador e pode ser instalado diretamente no celular como um aplicativo nativo — sem precisar de loja de apps.
-
-O projeto nasceu de uma necessidade real: ter uma ferramenta simples, rápida e acessível para registrar e visualizar as finanças do dia a dia.
+> *(Adicione aqui um print ou GIF da tela principal do app)*
 
 ---
 
 ## ✨ Funcionalidades
 
-- 📥 **Registro de receitas e gastos** com categorização
-- 📊 **Dashboard visual** com gráficos de resumo financeiro
-- 📅 Visualização por período
-- 📲 **Instalável como PWA** — funciona como app nativo no celular
-- ☁️ Dados salvos em tempo real via **Supabase**
+- 📊 Dashboard com visão geral das finanças
+- 💳 Controle de cartões de crédito e contas fixas
+- 📈 Visualização gráfica de receitas e despesas
+- 📱 Instalável no celular como app nativo (PWA)
+- 🔐 Autenticação e dados persistidos via Supabase
+- ⚡ Interface responsiva e rápida com React + Vite
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 🛠️ Stack
 
 | Tecnologia | Uso |
 |---|---|
 | TypeScript | Linguagem principal |
 | React | Interface do usuário |
-| Vite | Build e desenvolvimento |
-| Supabase | Banco de dados e autenticação |
+| Vite | Build e dev server |
+| Supabase | Backend, autenticação e banco de dados |
 | Vercel | Deploy em produção |
-| PWA (manifest + service worker) | Instalação como app nativo |
+| PWA | Instalação nativa no celular |
+| Tailwind CSS | Estilização |
 
 ---
 
-## 📂 Estrutura do Projeto
-
-```
-app-gestao-fin/
-├── components/       # Componentes reutilizáveis
-├── services/         # Integração com Supabase
-├── App.tsx           # Componente raiz
-├── types.ts          # Tipagens TypeScript
-├── constants.ts      # Constantes do app
-├── manifest.json     # Configuração PWA
-└── index.html        # Entry point
-```
-
----
-
-## ⚙️ Como Rodar Localmente
+## 🚀 Como rodar localmente
 
 ```bash
 # Clone o repositório
@@ -76,22 +49,44 @@ cd app-gestao-fin
 # Instale as dependências
 npm install
 
-# Inicie o servidor de desenvolvimento
+# Configure as variáveis de ambiente
+# Crie um arquivo .env com suas credenciais do Supabase:
+# VITE_SUPABASE_URL=sua_url
+# VITE_SUPABASE_ANON_KEY=sua_chave
+
+# Rode em desenvolvimento
 npm run dev
 ```
 
-> ⚠️ Para conectar ao Supabase, configure as variáveis de ambiente com suas credenciais.
+---
+
+## 📁 Estrutura do Projeto
+
+```
+app-gestao-fin/
+├── components/        # Componentes React reutilizáveis
+├── services/          # Integração com Supabase e APIs
+├── App.tsx            # Componente raiz
+├── types.ts           # Tipagens TypeScript
+├── constants.ts       # Constantes da aplicação
+├── manifest.json      # Configuração PWA
+└── vite.config.ts     # Configuração do Vite
+```
+
+---
+
+## 🌐 Deploy
+
+O app está em produção via **Vercel** com deploy automático a cada push na branch `main`.
+
+**URL:** [https://app-gestao-fin.vercel.app](https://app-gestao-fin.vercel.app)
 
 ---
 
 ## 👩‍💻 Autora
 
-**Crislaine Gomes Oliveira**
-Analista de Dados & BI | Automação | Low-Code
+**Crislaine Gomes** — Analista de Dados & BI | Desenvolvedora
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/crislainegomesoliveira)
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/crislaingomez-coder)
-
----
-
-> 💡 *Este é um dos projetos do meu portfólio. Confira outros em [github.com/crislaingomez-coder](https://github.com/crislaingomez-coder)*
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://linkedin.com/in/crislainegomesoliveira)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat&logo=github&logoColor=white)](https://github.com/crislaingomez-coder)
+[![Email](https://img.shields.io/badge/Email-D14836?style=flat&logo=gmail&logoColor=white)](mailto:crislaingomez@gmail.com)
